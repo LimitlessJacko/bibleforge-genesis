@@ -14,7 +14,112 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chess_games: {
+        Row: {
+          black_player_id: string
+          black_rating_after: number
+          black_rating_before: number
+          id: string
+          moves_count: number
+          played_at: string
+          result: string
+          time_control: number | null
+          white_player_id: string
+          white_rating_after: number
+          white_rating_before: number
+          winner_id: string | null
+        }
+        Insert: {
+          black_player_id: string
+          black_rating_after: number
+          black_rating_before: number
+          id?: string
+          moves_count?: number
+          played_at?: string
+          result: string
+          time_control?: number | null
+          white_player_id: string
+          white_rating_after: number
+          white_rating_before: number
+          winner_id?: string | null
+        }
+        Update: {
+          black_player_id?: string
+          black_rating_after?: number
+          black_rating_before?: number
+          id?: string
+          moves_count?: number
+          played_at?: string
+          result?: string
+          time_control?: number | null
+          white_player_id?: string
+          white_rating_after?: number
+          white_rating_before?: number
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chess_games_black_player_id_fkey"
+            columns: ["black_player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chess_games_white_player_id_fkey"
+            columns: ["white_player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chess_games_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          chess_rating: number
+          created_at: string
+          draws: number
+          games_played: number
+          id: string
+          losses: number
+          updated_at: string
+          username: string | null
+          wins: number
+        }
+        Insert: {
+          avatar_url?: string | null
+          chess_rating?: number
+          created_at?: string
+          draws?: number
+          games_played?: number
+          id: string
+          losses?: number
+          updated_at?: string
+          username?: string | null
+          wins?: number
+        }
+        Update: {
+          avatar_url?: string | null
+          chess_rating?: number
+          created_at?: string
+          draws?: number
+          games_played?: number
+          id?: string
+          losses?: number
+          updated_at?: string
+          username?: string | null
+          wins?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
