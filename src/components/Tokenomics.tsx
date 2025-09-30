@@ -41,7 +41,7 @@ const Tokenomics = () => {
             <Coins className="w-8 h-8 text-secondary" />
             <div className="text-left">
               <div className="text-3xl font-bold text-foreground">SPW Token</div>
-              <div className="text-sm text-muted-foreground">Total Supply: 1,000,000,000</div>
+              <div className="text-sm text-muted-foreground">Total Supply: 3,000,000,000,000</div>
             </div>
           </div>
         </div>
