@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import ArcadeFighting from "./pages/ArcadeFighting";
 import BiblicalChess from "./pages/BiblicalChess";
 import ScriptureTrivia from "./pages/ScriptureTrivia";
+import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="/arcade-fighting" element={<ArcadeFighting />} />
           <Route path="/biblical-chess" element={<BiblicalChess />} />
           <Route path="/scripture-trivia" element={<ScriptureTrivia />} />

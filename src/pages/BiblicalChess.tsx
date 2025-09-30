@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Crown, RotateCcw, AlertTriangle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
 
 // Import character images
 import jesusImg from "@/assets/characters/jesus.jpg";
@@ -85,6 +87,8 @@ const BiblicalChess = () => {
   const [timeControl, setTimeControl] = useState<number | null>(null);
   const [lightTimeLeft, setLightTimeLeft] = useState<number>(0);
   const [darkTimeLeft, setDarkTimeLeft] = useState<number>(0);
+  const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   
   const timeOptions = [
     { label: "No Time Limit", value: null },
@@ -94,6 +98,101 @@ const BiblicalChess = () => {
     { label: "Rapid 15 min", value: 900 },
     { label: "Classical 30 min", value: 1800 },
   ];
+
+  // Check authentication status
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        setTimeout(() => {
+          fetchUserProfile(session.user.id);
+        }, 0);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchUserProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    
+    if (data) {
+      setUserProfile(data);
+    }
+  };
+
+  const calculateEloChange = (rating1: number, rating2: number, result: number): number => {
+    const K = 32; // K-factor for rating changes
+    const expectedScore = 1 / (1 + Math.pow(10, (rating2 - rating1) / 400));
+    return Math.round(K * (result - expectedScore));
+  };
+
+  const saveGameResult = async (winner: Player | null) => {
+    if (!user || !userProfile) {
+      toast({
+        title: "Game Complete",
+        description: "Sign in to save your games and track ratings!",
+        variant: "default",
+      });
+      return;
+    }
+
+    try {
+      const result = winner === null ? 'draw' : 
+                     winner === 'light' ? (lightTimeLeft === 0 ? 'white_timeout' : 'white_win') :
+                     (darkTimeLeft === 0 ? 'black_timeout' : 'black_win');
+      
+      // For single player, assume opponent rating of 1200
+      const opponentRating = 1200;
+      const playerRating = userProfile.chess_rating;
+      
+      const gameResult = winner === null ? 0.5 : (winner === 'light' ? 1 : 0);
+      const ratingChange = calculateEloChange(playerRating, opponentRating, gameResult);
+      
+      const newRating = Math.max(100, playerRating + ratingChange);
+      
+      // Update user's rating and stats
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          chess_rating: newRating,
+          games_played: userProfile.games_played + 1,
+          wins: userProfile.wins + (winner === 'light' ? 1 : 0),
+          losses: userProfile.losses + (winner === 'dark' ? 1 : 0),
+          draws: userProfile.draws + (winner === null ? 1 : 0),
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      // Refresh profile
+      await fetchUserProfile(user.id);
+
+      toast({
+        title: "Game Saved!",
+        description: `Rating: ${playerRating} → ${newRating} (${ratingChange >= 0 ? '+' : ''}${ratingChange})`,
+        className: "text-lg font-bold",
+      });
+    } catch (error: any) {
+      console.error('Error saving game:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save game result",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getPieceIcon = (piece: ChessPiece | null) => {
     if (!piece || !piece.type) return "";
@@ -264,6 +363,7 @@ const BiblicalChess = () => {
         setLightTimeLeft(prev => {
           if (prev <= 1) {
             setGameOver(true);
+            saveGameResult('dark');
             toast({
               title: "Time's Up!",
               description: "Dark wins by timeout!",
@@ -277,6 +377,7 @@ const BiblicalChess = () => {
         setDarkTimeLeft(prev => {
           if (prev <= 1) {
             setGameOver(true);
+            saveGameResult('light');
             toast({
               title: "Time's Up!",
               description: "Light wins by timeout!",
@@ -302,9 +403,11 @@ const BiblicalChess = () => {
       
       if (inCheck && isInCheckmate(currentPlayer)) {
         setGameOver(true);
+        const winner = currentPlayer === "light" ? "dark" : "light";
+        saveGameResult(winner);
         toast({
           title: "Checkmate!",
-          description: `${currentPlayer === "light" ? "Dark" : "Light"} wins the game!`,
+          description: `${winner === "light" ? "Light" : "Dark"} wins the game!`,
           className: "text-xl font-bold"
         });
       }
@@ -422,6 +525,40 @@ const BiblicalChess = () => {
         <h1 className="text-4xl md:text-5xl font-bold text-center mb-8 text-glow">
           Biblical Chess
         </h1>
+
+        {user && userProfile && (
+          <div className="flex justify-center mb-6">
+            <Card className="p-4 inline-flex items-center gap-3">
+              <div>
+                <div className="text-sm text-muted-foreground">Playing as</div>
+                <div className="font-bold text-lg">{userProfile.username}</div>
+              </div>
+              <div className="h-10 w-px bg-border" />
+              <div>
+                <div className="text-sm text-muted-foreground">Rating</div>
+                <div className="font-bold text-lg text-primary">{userProfile.chess_rating}</div>
+              </div>
+              <div className="h-10 w-px bg-border" />
+              <div className="text-sm">
+                <div className="text-muted-foreground">Record</div>
+                <div className="font-semibold">
+                  {userProfile.wins}W - {userProfile.losses}L - {userProfile.draws}D
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {!user && !gameStarted && (
+          <div className="flex justify-center mb-6">
+            <Card className="p-4 text-center">
+              <p className="text-muted-foreground mb-2">Sign in to track your chess rating!</p>
+              <Button onClick={() => navigate("/auth")} size="sm">
+                Sign In
+              </Button>
+            </Card>
+          </div>
+        )}
 
         {!gameStarted && (
           <Card className="max-w-2xl mx-auto p-8 mb-8">
