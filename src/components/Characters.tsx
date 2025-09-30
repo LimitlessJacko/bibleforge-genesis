@@ -5,6 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Shield, Sword, Zap, Heart, Target, Brain, BookOpen } from "lucide-react";
 import { toast } from "sonner";
+import michaelImg from "@/assets/characters/michael.jpg";
+import davidImg from "@/assets/characters/david.jpg";
+import deborahImg from "@/assets/characters/deborah.jpg";
+import solomonImg from "@/assets/characters/solomon.jpg";
+import jesusImg from "@/assets/characters/jesus.jpg";
+import nehemiahImg from "@/assets/characters/nehemiah.jpg";
+import satanImg from "@/assets/characters/satan.jpg";
+import goliathImg from "@/assets/characters/goliath.jpg";
+import jezebelImg from "@/assets/characters/jezebel.jpg";
+import pharaohImg from "@/assets/characters/pharaoh.jpg";
+import judasImg from "@/assets/characters/judas.jpg";
+import herodImg from "@/assets/characters/herod.jpg";
 
 const characters = [
   {
@@ -15,6 +27,7 @@ const characters = [
     rarity: "Legendary",
     description: "The Archangel Michael leads heavenly forces with divine power and strategic mastery.",
     scripture: ["Daniel 10:13", "Revelation 12:7-9"],
+    image: michaelImg,
     stats: {
       health: 800,
       attack: 220,
@@ -37,6 +50,7 @@ const characters = [
     rarity: "Epic",
     description: "The shepherd king who defeated Goliath, combining faith with precision.",
     scripture: ["1 Samuel 17", "Psalm 23"],
+    image: davidImg,
     stats: {
       health: 600,
       attack: 190,
@@ -59,6 +73,7 @@ const characters = [
     rarity: "Epic",
     description: "Prophet and judge who led Israel to victory with divine wisdom.",
     scripture: ["Judges 4-5"],
+    image: deborahImg,
     stats: {
       health: 550,
       attack: 140,
@@ -81,6 +96,7 @@ const characters = [
     rarity: "Legendary",
     description: "The wisest king who ever lived, builder of the Temple, blessed with divine insight.",
     scripture: ["1 Kings 3:12", "1 Kings 4:29-34", "Proverbs 1:1"],
+    image: solomonImg,
     stats: {
       health: 650,
       attack: 130,
@@ -103,6 +119,7 @@ const characters = [
     rarity: "Divine",
     description: "The Son of God, Messiah and Redeemer, wielding ultimate divine authority.",
     scripture: ["John 1:1-14", "Matthew 28:18", "Revelation 19:16"],
+    image: jesusImg,
     stats: {
       health: 1000,
       attack: 250,
@@ -125,6 +142,7 @@ const characters = [
     rarity: "Epic",
     description: "Cupbearer turned governor who rebuilt Jerusalem's walls against all opposition.",
     scripture: ["Nehemiah 2:17-18", "Nehemiah 4:14", "Nehemiah 6:15-16"],
+    image: nehemiahImg,
     stats: {
       health: 720,
       attack: 160,
@@ -147,6 +165,7 @@ const characters = [
     rarity: "Divine",
     description: "The adversary, the fallen angel who wages war against God and mankind.",
     scripture: ["Isaiah 14:12-15", "Ezekiel 28:12-17", "Revelation 12:9"],
+    image: satanImg,
     stats: {
       health: 950,
       attack: 240,
@@ -169,6 +188,7 @@ const characters = [
     rarity: "Epic",
     description: "The Philistine champion, a giant warrior of immense strength and intimidation.",
     scripture: ["1 Samuel 17:4-7", "1 Samuel 17:23-24"],
+    image: goliathImg,
     stats: {
       health: 900,
       attack: 280,
@@ -191,6 +211,7 @@ const characters = [
     rarity: "Legendary",
     description: "The wicked queen who promoted Baal worship and persecuted God's prophets.",
     scripture: ["1 Kings 16:31", "1 Kings 19:1-2", "2 Kings 9:30-37"],
+    image: jezebelImg,
     stats: {
       health: 680,
       attack: 170,
@@ -213,6 +234,7 @@ const characters = [
     rarity: "Legendary",
     description: "The Egyptian king who enslaved Israel and hardened his heart against God.",
     scripture: ["Exodus 5:2", "Exodus 7-14"],
+    image: pharaohImg,
     stats: {
       health: 820,
       attack: 200,
@@ -235,6 +257,7 @@ const characters = [
     rarity: "Rare",
     description: "The disciple who betrayed Jesus for thirty pieces of silver.",
     scripture: ["Matthew 26:14-16", "Matthew 26:47-50", "Matthew 27:3-5"],
+    image: judasImg,
     stats: {
       health: 650,
       attack: 210,
@@ -257,6 +280,7 @@ const characters = [
     rarity: "Epic",
     description: "The paranoid king who ordered the massacre of innocent children.",
     scripture: ["Matthew 2:16-18", "Luke 23:8-11"],
+    image: herodImg,
     stats: {
       health: 750,
       attack: 180,
@@ -308,12 +332,28 @@ const Characters = () => {
             {characters.map((character) => (
               <Card 
                 key={character.id} 
-                className="bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all duration-300 glow-subtle cursor-pointer"
+                className="overflow-hidden bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all duration-300 glow-subtle cursor-pointer hover:scale-105 group"
                 onClick={() => setSelectedCharacter(character)}
               >
+                {character.image && (
+                  <div className="relative h-64 overflow-hidden">
+                    <img 
+                      src={character.image} 
+                      alt={character.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent"></div>
+                    <Badge 
+                      variant={character.alignment === "Good" ? "default" : "destructive"}
+                      className="absolute top-3 right-3 text-sm px-3 py-1"
+                    >
+                      {character.alignment}
+                    </Badge>
+                  </div>
+                )}
                 <CardHeader>
                   <div className="flex justify-between items-start mb-2">
-                    <Badge variant={character.rarity === "Legendary" ? "default" : "secondary"} className="glow-divine">
+                    <Badge variant={character.rarity === "Divine" || character.rarity === "Legendary" ? "default" : "secondary"} className="glow-divine">
                       {character.rarity}
                     </Badge>
                     <Badge variant="outline">{character.role}</Badge>
@@ -375,16 +415,30 @@ const Characters = () => {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           {selectedCharacter && (
             <>
-              <DialogHeader>
-                <div className="flex items-center justify-between mb-4">
-                  <DialogTitle className="text-4xl text-secondary">{selectedCharacter.name}</DialogTitle>
-                  <div className="flex gap-2">
-                    <Badge variant={selectedCharacter.rarity === "Legendary" ? "default" : "secondary"} className="glow-divine text-base px-3 py-1">
+              {selectedCharacter.image && (
+                <div className="relative h-72 -mt-6 -mx-6 mb-4 overflow-hidden">
+                  <img 
+                    src={selectedCharacter.image} 
+                    alt={selectedCharacter.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-card via-card/70 to-transparent"></div>
+                  <div className="absolute bottom-4 left-6 flex gap-2">
+                    <Badge 
+                      variant={selectedCharacter.alignment === "Good" ? "default" : "destructive"}
+                      className="text-lg px-4 py-2"
+                    >
+                      {selectedCharacter.alignment}
+                    </Badge>
+                    <Badge variant={selectedCharacter.rarity === "Divine" || selectedCharacter.rarity === "Legendary" ? "default" : "secondary"} className="glow-divine text-lg px-4 py-2">
                       {selectedCharacter.rarity}
                     </Badge>
-                    <Badge variant="outline" className="text-base px-3 py-1">{selectedCharacter.role}</Badge>
+                    <Badge variant="outline" className="text-lg px-4 py-2">{selectedCharacter.role}</Badge>
                   </div>
                 </div>
+              )}
+              <DialogHeader>
+                <DialogTitle className="text-4xl text-secondary">{selectedCharacter.name}</DialogTitle>
                 <DialogDescription className="text-lg">
                   {selectedCharacter.description}
                 </DialogDescription>
