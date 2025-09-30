@@ -90,11 +90,11 @@ const LimitlessBoots = () => {
   };
 
   return (
-    <section id="boots" className="py-24 px-4">
+    <section id="boots" className="py-24 px-4 bg-gradient-to-b from-boots-luxury via-background to-background">
       <div className="container mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
           <div>
-            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-secondary via-primary to-accent bg-clip-text text-transparent">
+            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-boots-emerald via-boots-glow to-secondary bg-clip-text text-transparent">
               Limitless Boots
             </h2>
             <p className="text-xl text-muted-foreground mb-6">
@@ -102,21 +102,21 @@ const LimitlessBoots = () => {
             </p>
             <div className="space-y-4 mb-8">
               <div className="flex items-start gap-3">
-                <Sparkles className="w-6 h-6 text-secondary flex-shrink-0 mt-1" />
+                <Sparkles className="w-6 h-6 text-boots-emerald flex-shrink-0 mt-1" />
                 <div>
                   <h4 className="font-semibold text-foreground mb-1">Tiered Progression</h4>
                   <p className="text-sm text-muted-foreground">Upgrade from Steadfastness to Swiftness to ultimate Limitless tier</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Zap className="w-6 h-6 text-accent flex-shrink-0 mt-1" />
+                <Zap className="w-6 h-6 text-boots-glow flex-shrink-0 mt-1" />
                 <div>
                   <h4 className="font-semibold text-foreground mb-1">Powerful Effects</h4>
                   <p className="text-sm text-muted-foreground">Each boot grants unique passive bonuses and active abilities</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Shield className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
+                <Shield className="w-6 h-6 text-boots-emerald flex-shrink-0 mt-1" />
                 <div>
                   <h4 className="font-semibold text-foreground mb-1">NFT Collectibles</h4>
                   <p className="text-sm text-muted-foreground">Own, trade, and upgrade your boots on-chain</p>
@@ -126,11 +126,11 @@ const LimitlessBoots = () => {
           </div>
           
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 blur-3xl animate-pulse-glow"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-boots-emerald/20 to-boots-glow/20 blur-3xl animate-pulse-glow"></div>
             <img 
               src={bootsImage} 
               alt="Limitless Boots"
-              className="relative rounded-lg glow-divine animate-float"
+              className="relative rounded-lg glow-boots animate-float"
             />
           </div>
         </div>
@@ -139,19 +139,19 @@ const LimitlessBoots = () => {
           {bootsTiers.map((boot) => (
             <Card 
               key={boot.tier} 
-              className="bg-card/50 backdrop-blur-sm border-primary/20 hover:border-secondary/50 transition-all duration-300 glow-subtle"
+              className="bg-gradient-to-br from-boots-luxury to-card/50 backdrop-blur-sm border-boots-emerald/30 hover:border-boots-glow/60 transition-all duration-300 glow-boots"
             >
               <CardHeader>
                 <div className="flex items-center justify-between mb-4">
-                  <Badge variant="default" className="text-lg px-4 py-1">
+                  <Badge className="text-lg px-4 py-1 bg-boots-emerald text-white">
                     Tier {boot.tier}
                   </Badge>
-                  <Badge variant={boot.rarity === "Legendary" ? "default" : "secondary"}>
+                  <Badge variant={boot.rarity === "Legendary" ? "default" : "secondary"} className={boot.rarity === "Legendary" ? "bg-boots-glow text-boots-luxury" : ""}>
                     {boot.rarity}
                   </Badge>
                 </div>
-                <CardTitle className="text-2xl text-secondary">{boot.name}</CardTitle>
-                <CardDescription className="text-lg font-semibold text-primary">
+                <CardTitle className="text-2xl text-boots-glow">{boot.name}</CardTitle>
+                <CardDescription className="text-lg font-semibold text-boots-emerald">
                   {boot.price}
                 </CardDescription>
               </CardHeader>
@@ -160,12 +160,12 @@ const LimitlessBoots = () => {
                 <div className="space-y-3 mb-6">
                   <h4 className="text-sm font-semibold text-foreground">Effects</h4>
                   {boot.effects.map((effect, idx) => (
-                    <div key={idx} className="p-3 bg-background/50 rounded-lg border border-border/50">
+                    <div key={idx} className="p-3 bg-background/50 rounded-lg border border-boots-emerald/30">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-primary">
+                        <span className="text-sm font-medium text-boots-emerald">
                           {effect.ability || effect.stat}
                         </span>
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs border-boots-emerald/50">
                           {effect.type}
                         </Badge>
                       </div>
@@ -182,8 +182,8 @@ const LimitlessBoots = () => {
                   ))}
                 </div>
                 <Button 
-                  variant={boot.tier === "III" ? "hero" : "outline"} 
-                  className="w-full"
+                  variant={boot.tier === "III" ? "default" : "outline"} 
+                  className={boot.tier === "III" ? "w-full bg-gradient-to-r from-boots-emerald to-boots-glow hover:from-boots-glow hover:to-boots-emerald text-boots-luxury font-bold" : "w-full border-boots-emerald/50 text-boots-emerald hover:bg-boots-emerald/10"}
                   onClick={() => boot.tier === "III" ? handleMint(boot.name) : handlePurchase(boot.name, boot.price)}
                 >
                   {boot.tier === "III" ? "Mint Now" : "Purchase"}

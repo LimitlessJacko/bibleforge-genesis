@@ -43,12 +43,18 @@ All colors MUST be HSL.
     --warfare: 0 80% 50%;
     --celestial: 210 100% 60%;
     
+    --boots-emerald: 160 84% 39%;
+    --boots-luxury: 0 0% 8%;
+    --boots-emerald-glow: 160 100% 50%;
+    
     --gradient-divine: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --gradient-celestial: linear-gradient(180deg, hsl(var(--celestial) / 0.2), transparent);
     --gradient-warfare: linear-gradient(90deg, hsl(var(--warfare) / 0.3), hsl(var(--primary) / 0.3));
+    --gradient-boots: linear-gradient(135deg, hsl(var(--boots-luxury)), hsl(var(--boots-emerald) / 0.4));
     
     --shadow-divine: 0 0 40px hsl(var(--primary-glow) / 0.4);
     --shadow-glow: 0 10px 50px -10px hsl(var(--divine) / 0.3);
+    --shadow-boots: 0 0 60px hsl(var(--boots-emerald) / 0.5);
     
     --transition-divine: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 
@@ -126,6 +132,14 @@ All colors MUST be HSL.
   
   .glow-subtle {
     box-shadow: var(--shadow-glow);
+  }
+  
+  .glow-boots {
+    box-shadow: var(--shadow-boots);
+  }
+  
+  .text-glow {
+    text-shadow: 0 0 30px hsl(var(--secondary) / 0.5);
   }
   
   .animate-float {
