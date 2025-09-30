@@ -1,10 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Swords, Crown, BookOpen } from "lucide-react";
 import chessMode from "@/assets/chess-mode.jpg";
-import { toast } from "sonner";
 
 const gameModes = [
   {
@@ -76,12 +76,16 @@ const gameModes = [
 ];
 
 const GameModes = () => {
+  const navigate = useNavigate();
   const [selectedMode, setSelectedMode] = useState<typeof gameModes[0] | null>(null);
 
-  const handlePlayNow = (modeTitle: string) => {
-    toast.success(`Launching ${modeTitle}...`, {
-      description: "Get ready to enter the battlefield!"
-    });
+  const handlePlayNow = (modeId: string) => {
+    const routes: Record<string, string> = {
+      "arcade": "/arcade-fighting",
+      "chess": "/biblical-chess",
+      "trivia": "/scripture-trivia"
+    };
+    navigate(routes[modeId]);
   };
 
   return (
@@ -144,7 +148,7 @@ const GameModes = () => {
                       <Button 
                         variant="default" 
                         className="flex-1"
-                        onClick={() => handlePlayNow(mode.title)}
+                        onClick={() => handlePlayNow(mode.id)}
                       >
                         Play Now
                       </Button>
@@ -234,7 +238,7 @@ const GameModes = () => {
                   variant="hero" 
                   className="w-full"
                   onClick={() => {
-                    handlePlayNow(selectedMode.title);
+                    handlePlayNow(selectedMode.id);
                     setSelectedMode(null);
                   }}
                 >

@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import ArcadeFighting from "./pages/ArcadeFighting";
+import BiblicalChess from "./pages/BiblicalChess";
+import ScriptureTrivia from "./pages/ScriptureTrivia";
 
 const queryClient = new QueryClient();
 
@@ -16,6 +19,9 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/arcade-fighting" element={<ArcadeFighting />} />
+          <Route path="/biblical-chess" element={<BiblicalChess />} />
+          <Route path="/scripture-trivia" element={<ScriptureTrivia />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
