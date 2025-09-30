@@ -5,6 +5,15 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Crown, RotateCcw, AlertTriangle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
@@ -89,6 +98,10 @@ const BiblicalChess = () => {
   const [darkTimeLeft, setDarkTimeLeft] = useState<number>(0);
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [checkmateDialog, setCheckmateDialog] = useState<{ show: boolean; winner: Player | null }>({
+    show: false,
+    winner: null
+  });
   
   const timeOptions = [
     { label: "No Time Limit", value: null },
@@ -404,6 +417,7 @@ const BiblicalChess = () => {
       if (inCheck && isInCheckmate(currentPlayer)) {
         setGameOver(true);
         const winner = currentPlayer === "light" ? "dark" : "light";
+        setCheckmateDialog({ show: true, winner });
         saveGameResult(winner);
         toast({
           title: "Checkmate!",
@@ -492,6 +506,7 @@ const BiblicalChess = () => {
     setGameOver(false);
     setGameStarted(false);
     setTimeControl(null);
+    setCheckmateDialog({ show: false, winner: null });
   };
   
   const formatTime = (seconds: number): string => {
@@ -838,6 +853,34 @@ const BiblicalChess = () => {
           </Card>
         )}
       </div>
+
+      {/* Checkmate Alert Dialog */}
+      <AlertDialog open={checkmateDialog.show} onOpenChange={(open) => setCheckmateDialog({ ...checkmateDialog, show: open })}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-3xl font-bold text-center flex items-center justify-center gap-2">
+              <Crown className="w-8 h-8 text-yellow-500" />
+              Checkmate!
+              <Crown className="w-8 h-8 text-yellow-500" />
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-xl py-4">
+              <span className="font-bold text-2xl">
+                {checkmateDialog.winner === "light" ? "⚪ Light" : "⚫ Dark"} Wins!
+              </span>
+              <p className="mt-4 text-lg">
+                {checkmateDialog.winner === "light" 
+                  ? "The forces of Light have triumphed!" 
+                  : "The forces of Darkness have prevailed!"}
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={resetGame} className="w-full">
+              Play Again
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
