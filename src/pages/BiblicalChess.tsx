@@ -81,6 +81,19 @@ const BiblicalChess = () => {
   const [lastMove, setLastMove] = useState<[number, number, number, number] | null>(null);
   const [isInCheck, setIsInCheck] = useState<Player | null>(null);
   const [gameOver, setGameOver] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [timeControl, setTimeControl] = useState<number | null>(null);
+  const [lightTimeLeft, setLightTimeLeft] = useState<number>(0);
+  const [darkTimeLeft, setDarkTimeLeft] = useState<number>(0);
+  
+  const timeOptions = [
+    { label: "No Time Limit", value: null },
+    { label: "Blitz 3 min", value: 180 },
+    { label: "Blitz 5 min", value: 300 },
+    { label: "Rapid 10 min", value: 600 },
+    { label: "Rapid 15 min", value: 900 },
+    { label: "Classical 30 min", value: 1800 },
+  ];
 
   const getPieceIcon = (piece: ChessPiece | null) => {
     if (!piece || !piece.type) return "";
@@ -242,7 +255,46 @@ const BiblicalChess = () => {
     return moves;
   };
 
+  // Timer countdown effect
   useEffect(() => {
+    if (!gameStarted || gameOver || timeControl === null) return;
+    
+    const interval = setInterval(() => {
+      if (currentPlayer === "light") {
+        setLightTimeLeft(prev => {
+          if (prev <= 1) {
+            setGameOver(true);
+            toast({
+              title: "Time's Up!",
+              description: "Dark wins by timeout!",
+              className: "text-xl font-bold"
+            });
+            return 0;
+          }
+          return prev - 1;
+        });
+      } else {
+        setDarkTimeLeft(prev => {
+          if (prev <= 1) {
+            setGameOver(true);
+            toast({
+              title: "Time's Up!",
+              description: "Light wins by timeout!",
+              className: "text-xl font-bold"
+            });
+            return 0;
+          }
+          return prev - 1;
+        });
+      }
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [currentPlayer, gameStarted, gameOver, timeControl]);
+
+  useEffect(() => {
+    if (!gameStarted) return;
+    
     const kingPos = findKing(currentPlayer);
     if (kingPos) {
       const inCheck = isSquareUnderAttack(kingPos[0], kingPos[1], currentPlayer === "light" ? "dark" : "light");
@@ -257,10 +309,10 @@ const BiblicalChess = () => {
         });
       }
     }
-  }, [currentPlayer, board]);
+  }, [currentPlayer, board, gameStarted]);
 
   const handleSquareClick = (row: number, col: number) => {
-    if (gameOver) return;
+    if (gameOver || !gameStarted) return;
 
     if (selectedSquare) {
       const [fromRow, fromCol] = selectedSquare;
@@ -316,6 +368,15 @@ const BiblicalChess = () => {
     }
   };
 
+  const startGame = (selectedTime: number | null) => {
+    setTimeControl(selectedTime);
+    if (selectedTime !== null) {
+      setLightTimeLeft(selectedTime);
+      setDarkTimeLeft(selectedTime);
+    }
+    setGameStarted(true);
+  };
+
   const resetGame = () => {
     setBoard(JSON.parse(JSON.stringify(initialBoard)));
     setSelectedSquare(null);
@@ -326,6 +387,14 @@ const BiblicalChess = () => {
     setLastMove(null);
     setIsInCheck(null);
     setGameOver(false);
+    setGameStarted(false);
+    setTimeControl(null);
+  };
+  
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const getSquareColor = (row: number, col: number) => {
@@ -354,7 +423,26 @@ const BiblicalChess = () => {
           Biblical Chess
         </h1>
 
-        {isInCheck && (
+        {!gameStarted && (
+          <Card className="max-w-2xl mx-auto p-8 mb-8">
+            <h2 className="text-2xl font-bold text-center mb-6">Select Time Control</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {timeOptions.map((option) => (
+                <Button
+                  key={option.label}
+                  onClick={() => startGame(option.value)}
+                  size="lg"
+                  variant={option.value === null ? "secondary" : "outline"}
+                  className="h-20 text-lg"
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {isInCheck && gameStarted && (
           <div className="flex justify-center mb-4">
             <Badge variant="destructive" className="text-lg px-6 py-2 animate-pulse">
               <AlertTriangle className="mr-2 h-5 w-5" />
@@ -363,18 +451,34 @@ const BiblicalChess = () => {
           </div>
         )}
 
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-[1fr,auto,1fr] gap-6 items-start">
-          {/* Dark Captured */}
-          <Card className="p-4">
-            <h3 className="font-bold mb-3 flex items-center gap-2 text-destructive">
-              <Crown className="h-5 w-5" /> Dark Captured
-            </h3>
-            <div className="flex flex-wrap gap-1">
-              {capturedPieces.dark.map((char, i) => (
-                <span key={i} className="text-xs bg-muted px-2 py-1 rounded">{char}</span>
-              ))}
-            </div>
-          </Card>
+        {gameStarted && (
+          <div className="max-w-7xl mx-auto grid lg:grid-cols-[1fr,auto,1fr] gap-6 items-start">
+            {/* Dark Captured & Timer */}
+            <Card className="p-4">
+              <h3 className="font-bold mb-3 flex items-center gap-2 text-destructive">
+                <Crown className="h-5 w-5" /> Dark Forces
+              </h3>
+              {timeControl !== null && (
+                <div className={`mb-4 p-3 rounded-lg text-center ${
+                  currentPlayer === "dark" ? "bg-destructive/20 ring-2 ring-destructive" : "bg-muted"
+                }`}>
+                  <div className="text-sm text-muted-foreground mb-1">Time Left</div>
+                  <div className={`text-3xl font-bold ${
+                    darkTimeLeft < 30 ? "text-destructive animate-pulse" : ""
+                  }`}>
+                    {formatTime(darkTimeLeft)}
+                  </div>
+                </div>
+              )}
+              <div>
+                <h4 className="text-xs font-semibold mb-2">Captured:</h4>
+                <div className="flex flex-wrap gap-1">
+                  {capturedPieces.dark.map((char, i) => (
+                    <span key={i} className="text-xs bg-muted px-2 py-1 rounded">{char}</span>
+                  ))}
+                </div>
+              </div>
+            </Card>
 
           {/* Chess Board */}
           <div className="space-y-4">
@@ -502,18 +606,34 @@ const BiblicalChess = () => {
             </div>
           </div>
 
-          {/* Light Captured */}
-          <Card className="p-4">
-            <h3 className="font-bold mb-3 flex items-center gap-2 text-primary">
-              <Crown className="h-5 w-5" /> Light Captured
-            </h3>
-            <div className="flex flex-wrap gap-1">
-              {capturedPieces.light.map((char, i) => (
-                <span key={i} className="text-xs bg-muted px-2 py-1 rounded">{char}</span>
-              ))}
-            </div>
-          </Card>
-        </div>
+            {/* Light Captured & Timer */}
+            <Card className="p-4">
+              <h3 className="font-bold mb-3 flex items-center gap-2 text-primary">
+                <Crown className="h-5 w-5" /> Light Forces
+              </h3>
+              {timeControl !== null && (
+                <div className={`mb-4 p-3 rounded-lg text-center ${
+                  currentPlayer === "light" ? "bg-primary/20 ring-2 ring-primary" : "bg-muted"
+                }`}>
+                  <div className="text-sm text-muted-foreground mb-1">Time Left</div>
+                  <div className={`text-3xl font-bold ${
+                    lightTimeLeft < 30 ? "text-destructive animate-pulse" : ""
+                  }`}>
+                    {formatTime(lightTimeLeft)}
+                  </div>
+                </div>
+              )}
+              <div>
+                <h4 className="text-xs font-semibold mb-2">Captured:</h4>
+                <div className="flex flex-wrap gap-1">
+                  {capturedPieces.light.map((char, i) => (
+                    <span key={i} className="text-xs bg-muted px-2 py-1 rounded">{char}</span>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
 
         {/* Piece Reference */}
         <Card className="max-w-4xl mx-auto mt-8 p-6">
