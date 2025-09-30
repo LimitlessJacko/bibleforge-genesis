@@ -3,6 +3,13 @@ import { Swords, Shield, Crown } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
 
 const Hero = () => {
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
@@ -32,11 +39,21 @@ const Hero = () => {
         </p>
 
         <div className="flex flex-wrap gap-4 justify-center mb-12">
-          <Button variant="hero" size="lg" className="text-lg">
+          <Button 
+            variant="hero" 
+            size="lg" 
+            className="text-lg"
+            onClick={() => scrollToSection('game-modes')}
+          >
             <Swords className="w-5 h-5" />
             Start Playing
           </Button>
-          <Button variant="divine" size="lg" className="text-lg">
+          <Button 
+            variant="divine" 
+            size="lg" 
+            className="text-lg"
+            onClick={() => scrollToSection('characters')}
+          >
             <Shield className="w-5 h-5" />
             View Characters
           </Button>
@@ -44,18 +61,30 @@ const Hero = () => {
 
         {/* Feature Pills */}
         <div className="flex flex-wrap gap-4 justify-center text-sm">
-          <div className="px-6 py-2 rounded-full bg-card/50 backdrop-blur-sm border border-primary/20">
+          <button
+            onClick={() => scrollToSection('game-modes')}
+            className="px-6 py-2 rounded-full bg-card/50 backdrop-blur-sm border border-primary/20 hover:border-primary/50 transition-all cursor-pointer hover:scale-105"
+          >
             ⚔️ Arcade Fighting
-          </div>
-          <div className="px-6 py-2 rounded-full bg-card/50 backdrop-blur-sm border border-accent/20">
+          </button>
+          <button
+            onClick={() => scrollToSection('game-modes')}
+            className="px-6 py-2 rounded-full bg-card/50 backdrop-blur-sm border border-accent/20 hover:border-accent/50 transition-all cursor-pointer hover:scale-105"
+          >
             ♟️ Biblical Chess
-          </div>
-          <div className="px-6 py-2 rounded-full bg-card/50 backdrop-blur-sm border border-secondary/20">
+          </button>
+          <button
+            onClick={() => scrollToSection('game-modes')}
+            className="px-6 py-2 rounded-full bg-card/50 backdrop-blur-sm border border-secondary/20 hover:border-secondary/50 transition-all cursor-pointer hover:scale-105"
+          >
             📖 Scripture Trivia
-          </div>
-          <div className="px-6 py-2 rounded-full bg-card/50 backdrop-blur-sm border border-primary/20">
+          </button>
+          <button
+            onClick={() => scrollToSection('characters')}
+            className="px-6 py-2 rounded-full bg-card/50 backdrop-blur-sm border border-primary/20 hover:border-primary/50 transition-all cursor-pointer hover:scale-105"
+          >
             🔥 NFT Warriors
-          </div>
+          </button>
         </div>
       </div>
     </section>

@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Zap, Shield, Sparkles } from "lucide-react";
 import bootsImage from "@/assets/limitless-boots.jpg";
+import { toast } from "sonner";
 
 const bootsTiers = [
   {
@@ -35,6 +36,18 @@ const bootsTiers = [
 ];
 
 const LimitlessBoots = () => {
+  const handlePurchase = (bootName: string, price: string) => {
+    toast.success(`Purchasing ${bootName}...`, {
+      description: `Cost: ${price} tokens`
+    });
+  };
+
+  const handleMint = (bootName: string) => {
+    toast.success(`Minting ${bootName}...`, {
+      description: "Your legendary boots will be ready soon!"
+    });
+  };
+
   return (
     <section id="boots" className="py-24 px-4">
       <div className="container mx-auto">
@@ -127,7 +140,11 @@ const LimitlessBoots = () => {
                     </div>
                   ))}
                 </div>
-                <Button variant={boot.tier === "III" ? "hero" : "outline"} className="w-full">
+                <Button 
+                  variant={boot.tier === "III" ? "hero" : "outline"} 
+                  className="w-full"
+                  onClick={() => boot.tier === "III" ? handleMint(boot.name) : handlePurchase(boot.name, boot.price)}
+                >
                   {boot.tier === "III" ? "Mint Now" : "Purchase"}
                 </Button>
               </CardContent>
