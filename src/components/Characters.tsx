@@ -17,6 +17,9 @@ import jezebelImg from "@/assets/characters/jezebel.jpg";
 import pharaohImg from "@/assets/characters/pharaoh.jpg";
 import judasImg from "@/assets/characters/judas.jpg";
 import herodImg from "@/assets/characters/herod.jpg";
+import ancientOfDaysImg from "@/assets/characters/ancient-of-days.jpg";
+import elijahImg from "@/assets/characters/elijah.jpg";
+import beastImg from "@/assets/characters/beast.jpg";
 
 const characters = [
   {
@@ -294,6 +297,80 @@ const characters = [
       { name: "Paranoid Fury", type: "Passive", description: "Attack speed increases when health is below 50%", cooldown: "N/A" }
     ],
     lore: "King Herod the Great ruled with an iron fist, paranoid of losing power. When he heard of a newborn king, he ordered all male children under two in Bethlehem killed. His cruelty and fear drove him to unspeakable acts, yet he could not thwart God's plan."
+  },
+  {
+    id: "char_0013",
+    name: "The Ancient of Days",
+    alignment: "Good",
+    role: "Supreme Deity",
+    rarity: "Mythic",
+    description: "The eternal God, the Alpha and Omega, Creator of all existence.",
+    scripture: ["Daniel 7:9-14", "Revelation 1:8", "Isaiah 46:9-10"],
+    image: ancientOfDaysImg,
+    unlockable: true,
+    stats: {
+      health: 9999,
+      attack: 999,
+      defense: 999,
+      spirit: 9999,
+      agility: 500,
+      wisdom: 9999
+    },
+    abilities: [
+      { name: "Let There Be Light", type: "Ultimate", description: "Instantly defeats all evil enemies and fully restores all allies", cooldown: "Once per match" },
+      { name: "Omnipotence", type: "Passive", description: "Cannot be defeated. All stats increase continuously. Immune to all debuffs", cooldown: "N/A" }
+    ],
+    lore: "The Ancient of Days sits enthroned above all creation, eternal and unchanging. His power is absolute, His wisdom infinite, His presence overwhelming. Before Him every knee will bow, and every tongue confess His sovereignty over all existence."
+  },
+  {
+    id: "char_0014",
+    name: "Elijah",
+    alignment: "Good",
+    role: "Prophet of Fire",
+    rarity: "Mythic",
+    description: "The fiery prophet who called down fire from heaven and never tasted death.",
+    scripture: ["1 Kings 18:36-39", "2 Kings 2:11", "Malachi 4:5"],
+    image: elijahImg,
+    unlockable: true,
+    stats: {
+      health: 850,
+      attack: 320,
+      defense: 200,
+      spirit: 750,
+      agility: 180,
+      wisdom: 450
+    },
+    abilities: [
+      { name: "Fire From Heaven", type: "Active", description: "Calls down devastating fire that deals massive area damage and burns continuously", cooldown: "25s" },
+      { name: "Chariot of Fire", type: "Ultimate", description: "Summons the whirlwind and fiery chariot, becoming invulnerable and dealing extreme damage", cooldown: "120s" },
+      { name: "Prophet's Mantle", type: "Passive", description: "Cannot be killed by normal means. Revives once with full health", cooldown: "Once per match" }
+    ],
+    lore: "Elijah the Tishbite stood alone against 450 prophets of Baal and called down fire from heaven. He never died but was taken up in a whirlwind by chariots of fire. His return is prophesied before the great and terrible day of the Lord."
+  },
+  {
+    id: "char_0015",
+    name: "The Beast",
+    alignment: "Evil",
+    role: "Apocalyptic Destroyer",
+    rarity: "Mythic",
+    description: "The Antichrist, the seven-headed beast from the sea who makes war against the saints.",
+    scripture: ["Revelation 13:1-8", "Revelation 17:8-14", "2 Thessalonians 2:3-4"],
+    image: beastImg,
+    unlockable: true,
+    stats: {
+      health: 1200,
+      attack: 350,
+      defense: 280,
+      spirit: 666,
+      agility: 150,
+      wisdom: 400
+    },
+    abilities: [
+      { name: "Mark of the Beast", type: "Active", description: "Curses all enemies with 666 damage over time and prevents healing", cooldown: "30s" },
+      { name: "Seven Heads", type: "Ultimate", description: "Splits into seven deadly forms that attack simultaneously", cooldown: "150s" },
+      { name: "Dragon's Authority", type: "Passive", description: "Gains power from defeated enemies. Takes reduced damage from non-divine attacks", cooldown: "N/A" }
+    ],
+    lore: "Rising from the sea with seven heads and ten horns, the Beast embodies the ultimate evil rebellion against God. Empowered by the dragon, it wages war against the saints and demands worship. Its power seems unstoppable until the return of the King of Kings."
   }
 ];
 
@@ -332,7 +409,9 @@ const Characters = () => {
             {characters.map((character) => (
               <Card 
                 key={character.id} 
-                className="overflow-hidden bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all duration-300 glow-subtle cursor-pointer hover:scale-105 group"
+                className={`overflow-hidden bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all duration-300 glow-subtle cursor-pointer hover:scale-105 group ${
+                  character.unlockable ? 'border-accent/50 shadow-[0_0_30px_rgba(var(--accent),0.3)]' : ''
+                }`}
                 onClick={() => setSelectedCharacter(character)}
               >
                 {character.image && (
@@ -343,6 +422,13 @@ const Characters = () => {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent"></div>
+                    {character.unlockable && (
+                      <Badge 
+                        className="absolute top-3 left-3 text-sm px-3 py-1 bg-accent/90 animate-pulse"
+                      >
+                        🔒 UNLOCKABLE
+                      </Badge>
+                    )}
                     <Badge 
                       variant={character.alignment === "Good" ? "default" : "destructive"}
                       className="absolute top-3 right-3 text-sm px-3 py-1"
@@ -353,7 +439,10 @@ const Characters = () => {
                 )}
                 <CardHeader>
                   <div className="flex justify-between items-start mb-2">
-                    <Badge variant={character.rarity === "Divine" || character.rarity === "Legendary" ? "default" : "secondary"} className="glow-divine">
+                    <Badge 
+                      variant={character.rarity === "Mythic" ? "default" : character.rarity === "Divine" || character.rarity === "Legendary" ? "default" : "secondary"} 
+                      className={`${character.rarity === "Mythic" ? "bg-gradient-to-r from-accent via-primary to-secondary animate-pulse glow-divine" : "glow-divine"}`}
+                    >
                       {character.rarity}
                     </Badge>
                     <Badge variant="outline">{character.role}</Badge>
@@ -423,14 +512,22 @@ const Characters = () => {
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-card via-card/70 to-transparent"></div>
-                  <div className="absolute bottom-4 left-6 flex gap-2">
+                  <div className="absolute bottom-4 left-6 flex gap-2 flex-wrap">
+                    {selectedCharacter.unlockable && (
+                      <Badge className="text-lg px-4 py-2 bg-accent/90 animate-pulse">
+                        🔒 UNLOCKABLE
+                      </Badge>
+                    )}
                     <Badge 
                       variant={selectedCharacter.alignment === "Good" ? "default" : "destructive"}
                       className="text-lg px-4 py-2"
                     >
                       {selectedCharacter.alignment}
                     </Badge>
-                    <Badge variant={selectedCharacter.rarity === "Divine" || selectedCharacter.rarity === "Legendary" ? "default" : "secondary"} className="glow-divine text-lg px-4 py-2">
+                    <Badge 
+                      variant={selectedCharacter.rarity === "Mythic" || selectedCharacter.rarity === "Divine" || selectedCharacter.rarity === "Legendary" ? "default" : "secondary"} 
+                      className={`text-lg px-4 py-2 ${selectedCharacter.rarity === "Mythic" ? "bg-gradient-to-r from-accent via-primary to-secondary glow-divine" : "glow-divine"}`}
+                    >
                       {selectedCharacter.rarity}
                     </Badge>
                     <Badge variant="outline" className="text-lg px-4 py-2">{selectedCharacter.role}</Badge>

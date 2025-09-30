@@ -19,7 +19,10 @@ const characters = [
   { id: "char_0009", name: "Jezebel", health: 680, attack: 170, defense: 140, spirit: 420, alignment: "Evil" },
   { id: "char_0010", name: "Pharaoh", health: 820, attack: 200, defense: 190, spirit: 300, alignment: "Evil" },
   { id: "char_0011", name: "Judas", health: 650, attack: 210, defense: 110, spirit: 250, alignment: "Evil" },
-  { id: "char_0012", name: "Herod", health: 750, attack: 180, defense: 160, spirit: 280, alignment: "Evil" }
+  { id: "char_0012", name: "Herod", health: 750, attack: 180, defense: 160, spirit: 280, alignment: "Evil" },
+  { id: "char_0013", name: "The Ancient of Days", health: 9999, attack: 999, defense: 999, spirit: 9999, alignment: "Good", unlockable: true },
+  { id: "char_0014", name: "Elijah", health: 850, attack: 320, defense: 200, spirit: 750, alignment: "Good", unlockable: true },
+  { id: "char_0015", name: "The Beast", health: 1200, attack: 350, defense: 280, spirit: 666, alignment: "Evil", unlockable: true }
 ];
 
 const ArcadeFighting = () => {
@@ -234,9 +237,16 @@ const ArcadeFighting = () => {
                     key={char.id}
                     className={`p-4 cursor-pointer transition-all hover:scale-105 ${
                       player?.id === char.id ? "ring-2 ring-primary shadow-glow" : ""
-                    } ${char.alignment === "Evil" ? "border-destructive/50" : "border-primary/50"}`}
+                    } ${char.alignment === "Evil" ? "border-destructive/50" : "border-primary/50"} ${
+                      char.unlockable ? "border-accent/70 shadow-[0_0_20px_rgba(var(--accent),0.4)]" : ""
+                    }`}
                     onClick={() => selectCharacter(char, true)}
                   >
+                    {char.unlockable && (
+                      <Badge className="mb-2 w-full bg-accent/90 animate-pulse text-xs">
+                        🔒 UNLOCKABLE
+                      </Badge>
+                    )}
                     <Badge className="mb-2" variant={char.alignment === "Good" ? "default" : "destructive"}>
                       {char.alignment}
                     </Badge>
@@ -258,9 +268,16 @@ const ArcadeFighting = () => {
                     key={char.id}
                     className={`p-4 cursor-pointer transition-all hover:scale-105 ${
                       opponent?.id === char.id ? "ring-2 ring-destructive shadow-glow" : ""
-                    } ${char.alignment === "Evil" ? "border-destructive/50" : "border-primary/50"}`}
+                    } ${char.alignment === "Evil" ? "border-destructive/50" : "border-primary/50"} ${
+                      char.unlockable ? "border-accent/70 shadow-[0_0_20px_rgba(var(--accent),0.4)]" : ""
+                    }`}
                     onClick={() => selectCharacter(char, false)}
                   >
+                    {char.unlockable && (
+                      <Badge className="mb-2 w-full bg-accent/90 animate-pulse text-xs">
+                        🔒 UNLOCKABLE
+                      </Badge>
+                    )}
                     <Badge className="mb-2" variant={char.alignment === "Good" ? "default" : "destructive"}>
                       {char.alignment}
                     </Badge>
