@@ -6,6 +6,20 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Crown, RotateCcw, AlertTriangle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
+// Import character images
+import jesusImg from "@/assets/characters/jesus.jpg";
+import davidImg from "@/assets/characters/david.jpg";
+import solomonImg from "@/assets/characters/solomon.jpg";
+import deborahImg from "@/assets/characters/deborah.jpg";
+import nehemiahImg from "@/assets/characters/nehemiah.jpg";
+import elijahImg from "@/assets/characters/elijah.jpg";
+import michaelImg from "@/assets/characters/michael.jpg";
+import satanImg from "@/assets/characters/satan.jpg";
+import goliathImg from "@/assets/characters/goliath.jpg";
+import pharaohImg from "@/assets/characters/pharaoh.jpg";
+import jezebelImg from "@/assets/characters/jezebel.jpg";
+import judasImg from "@/assets/characters/judas.jpg";
+
 type PieceType = "king" | "queen" | "rook" | "knight" | "bishop" | "pawn" | null;
 type Player = "light" | "dark";
 
@@ -13,6 +27,7 @@ interface ChessPiece {
   type: PieceType;
   player: Player;
   character: string;
+  image: string;
   hasMoved?: boolean;
 }
 
@@ -25,30 +40,30 @@ interface Move {
 
 const initialBoard: (ChessPiece | null)[][] = [
   [
-    { type: "rook", player: "dark", character: "Angel", hasMoved: false },
-    { type: "knight", player: "dark", character: "Prophet", hasMoved: false },
-    { type: "bishop", player: "dark", character: "Priest", hasMoved: false },
-    { type: "queen", player: "dark", character: "Deborah", hasMoved: false },
-    { type: "king", player: "dark", character: "Solomon", hasMoved: false },
-    { type: "bishop", player: "dark", character: "Priest", hasMoved: false },
-    { type: "knight", player: "dark", character: "Prophet", hasMoved: false },
-    { type: "rook", player: "dark", character: "Angel", hasMoved: false }
+    { type: "rook", player: "dark", character: "Goliath", image: goliathImg, hasMoved: false },
+    { type: "knight", player: "dark", character: "Pharaoh", image: pharaohImg, hasMoved: false },
+    { type: "bishop", player: "dark", character: "Jezebel", image: jezebelImg, hasMoved: false },
+    { type: "queen", player: "dark", character: "Satan", image: satanImg, hasMoved: false },
+    { type: "king", player: "dark", character: "Judas", image: judasImg, hasMoved: false },
+    { type: "bishop", player: "dark", character: "Jezebel", image: jezebelImg, hasMoved: false },
+    { type: "knight", player: "dark", character: "Pharaoh", image: pharaohImg, hasMoved: false },
+    { type: "rook", player: "dark", character: "Goliath", image: goliathImg, hasMoved: false }
   ],
-  Array(8).fill(null).map(() => ({ type: "pawn" as PieceType, player: "dark" as Player, character: "Disciple", hasMoved: false })),
+  Array(8).fill(null).map(() => ({ type: "pawn" as PieceType, player: "dark" as Player, character: "Demon", image: satanImg, hasMoved: false })),
   Array(8).fill(null),
   Array(8).fill(null),
   Array(8).fill(null),
   Array(8).fill(null),
-  Array(8).fill(null).map(() => ({ type: "pawn" as PieceType, player: "light" as Player, character: "Disciple", hasMoved: false })),
+  Array(8).fill(null).map(() => ({ type: "pawn" as PieceType, player: "light" as Player, character: "Angel", image: michaelImg, hasMoved: false })),
   [
-    { type: "rook", player: "light", character: "Angel", hasMoved: false },
-    { type: "knight", player: "light", character: "Prophet", hasMoved: false },
-    { type: "bishop", player: "light", character: "Priest", hasMoved: false },
-    { type: "queen", player: "light", character: "Esther", hasMoved: false },
-    { type: "king", player: "light", character: "Jesus", hasMoved: false },
-    { type: "bishop", player: "light", character: "Priest", hasMoved: false },
-    { type: "knight", player: "light", character: "Prophet", hasMoved: false },
-    { type: "rook", player: "light", character: "Angel", hasMoved: false }
+    { type: "rook", player: "light", character: "Nehemiah", image: nehemiahImg, hasMoved: false },
+    { type: "knight", player: "light", character: "David", image: davidImg, hasMoved: false },
+    { type: "bishop", player: "light", character: "Solomon", image: solomonImg, hasMoved: false },
+    { type: "queen", player: "light", character: "Deborah", image: deborahImg, hasMoved: false },
+    { type: "king", player: "light", character: "Jesus", image: jesusImg, hasMoved: false },
+    { type: "bishop", player: "light", character: "Elijah", image: elijahImg, hasMoved: false },
+    { type: "knight", player: "light", character: "Michael", image: michaelImg, hasMoved: false },
+    { type: "rook", player: "light", character: "Nehemiah", image: nehemiahImg, hasMoved: false }
   ]
 ];
 
@@ -389,42 +404,91 @@ const BiblicalChess = () => {
                   ))}
                 </div>
 
-                {/* Board */}
-                <div className="aspect-square w-full max-w-[576px] border-4 border-primary/20 rounded-lg overflow-hidden shadow-glow">
-                  <div className="grid grid-cols-8 h-full">
+                {/* Board with 3D perspective */}
+                <div 
+                  className="aspect-square w-full max-w-[576px] border-4 border-primary/20 rounded-lg overflow-hidden shadow-glow"
+                  style={{ perspective: "1200px" }}
+                >
+                  <div 
+                    className="grid grid-cols-8 h-full"
+                    style={{ 
+                      transform: "rotateX(15deg)",
+                      transformStyle: "preserve-3d"
+                    }}
+                  >
                     {board.map((row, rowIndex) =>
-                      row.map((piece, colIndex) => (
-                        <button
-                          key={`${rowIndex}-${colIndex}`}
-                          onClick={() => handleSquareClick(rowIndex, colIndex)}
-                          disabled={gameOver}
-                          className={`
-                            aspect-square flex items-center justify-center text-5xl transition-all
-                            ${getSquareColor(rowIndex, colIndex)}
-                            ${piece && !gameOver ? "cursor-pointer" : ""}
-                            ${gameOver ? "opacity-50" : ""}
-                            relative group
-                          `}
-                        >
-                          {piece && (
-                            <div className="flex flex-col items-center relative z-10">
-                              <span className={`${piece.player === "light" ? "filter brightness-150 drop-shadow-[0_2px_8px_rgba(255,255,255,0.8)]" : "filter brightness-50 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"} transition-transform group-hover:scale-110`}>
-                                {getPieceIcon(piece)}
-                              </span>
-                            </div>
-                          )}
-                          {/* Valid move indicator */}
-                          {validMoves.some(([r, c]) => r === rowIndex && c === colIndex) && !piece && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-4 h-4 rounded-full bg-primary/60"></div>
-                            </div>
-                          )}
-                          {/* Capture indicator */}
-                          {validMoves.some(([r, c]) => r === rowIndex && c === colIndex) && piece && (
-                            <div className="absolute inset-0 border-4 border-destructive/60 rounded-full"></div>
-                          )}
-                        </button>
-                      ))
+                      row.map((piece, colIndex) => {
+                        const isLight = (rowIndex + colIndex) % 2 === 0;
+                        return (
+                          <button
+                            key={`${rowIndex}-${colIndex}`}
+                            onClick={() => handleSquareClick(rowIndex, colIndex)}
+                            disabled={gameOver}
+                            className={`
+                              aspect-square flex items-center justify-center transition-all
+                              ${getSquareColor(rowIndex, colIndex)}
+                              ${piece && !gameOver ? "cursor-pointer" : ""}
+                              ${gameOver ? "opacity-50" : ""}
+                              relative group
+                            `}
+                            style={{
+                              background: isLight 
+                                ? "linear-gradient(135deg, hsl(45, 85%, 75%), hsl(45, 70%, 65%))" 
+                                : "linear-gradient(135deg, hsl(35, 60%, 45%), hsl(30, 55%, 35%))",
+                              boxShadow: isLight 
+                                ? "inset 0 -4px 8px rgba(0,0,0,0.1)" 
+                                : "inset 0 -4px 8px rgba(0,0,0,0.3)",
+                              transform: "translateZ(0)",
+                              transformStyle: "preserve-3d"
+                            }}
+                          >
+                            {piece && (
+                              <div 
+                                className="relative"
+                                style={{
+                                  transform: "translateZ(15px)",
+                                  transformStyle: "preserve-3d"
+                                }}
+                              >
+                                <img
+                                  src={piece.image}
+                                  alt={piece.character}
+                                  title={`${piece.character} (${piece.type})`}
+                                  className={`
+                                    w-14 h-14 rounded-full object-cover
+                                    border-3 ${piece.player === "light" ? "border-yellow-400" : "border-purple-600"}
+                                    shadow-[0_8px_16px_rgba(0,0,0,0.5)]
+                                    group-hover:scale-110 transition-transform duration-200
+                                  `}
+                                  style={{
+                                    filter: piece.player === "light" 
+                                      ? "drop-shadow(0 4px 8px rgba(234,179,8,0.7)) brightness(1.1)" 
+                                      : "drop-shadow(0 4px 8px rgba(147,51,234,0.7)) brightness(0.9)"
+                                  }}
+                                />
+                                {/* Piece type indicator */}
+                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-xs px-1.5 py-0.5 rounded-full bg-background/95 border border-primary/50 shadow-md">
+                                  {piece.type === "king" ? "👑" : 
+                                   piece.type === "queen" ? "♛" : 
+                                   piece.type === "rook" ? "🏰" : 
+                                   piece.type === "bishop" ? "⛪" : 
+                                   piece.type === "knight" ? "🐴" : "⚔️"}
+                                </div>
+                              </div>
+                            )}
+                            {/* Valid move indicator */}
+                            {validMoves.some(([r, c]) => r === rowIndex && c === colIndex) && !piece && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-4 h-4 rounded-full bg-primary/60 shadow-lg"></div>
+                              </div>
+                            )}
+                            {/* Capture indicator */}
+                            {validMoves.some(([r, c]) => r === rowIndex && c === colIndex) && piece && (
+                              <div className="absolute inset-0 border-4 border-destructive shadow-[0_0_20px_rgba(239,68,68,0.6)] rounded-lg"></div>
+                            )}
+                          </button>
+                        );
+                      })
                     )}
                   </div>
                 </div>

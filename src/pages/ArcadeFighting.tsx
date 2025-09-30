@@ -7,6 +7,41 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Swords, Heart, Zap, Shield, Flame } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
+// Import character images
+import jesusImg from "@/assets/characters/jesus.jpg";
+import davidImg from "@/assets/characters/david.jpg";
+import solomonImg from "@/assets/characters/solomon.jpg";
+import deborahImg from "@/assets/characters/deborah.jpg";
+import nehemiahImg from "@/assets/characters/nehemiah.jpg";
+import elijahImg from "@/assets/characters/elijah.jpg";
+import michaelImg from "@/assets/characters/michael.jpg";
+import ancientOfDaysImg from "@/assets/characters/ancient-of-days.jpg";
+import satanImg from "@/assets/characters/satan.jpg";
+import goliathImg from "@/assets/characters/goliath.jpg";
+import pharaohImg from "@/assets/characters/pharaoh.jpg";
+import jezebelImg from "@/assets/characters/jezebel.jpg";
+import judasImg from "@/assets/characters/judas.jpg";
+import herodImg from "@/assets/characters/herod.jpg";
+import beastImg from "@/assets/characters/beast.jpg";
+
+const characterImages: { [key: string]: string } = {
+  "Michael": michaelImg,
+  "David": davidImg,
+  "Deborah": deborahImg,
+  "Solomon": solomonImg,
+  "Jesus": jesusImg,
+  "Nehemiah": nehemiahImg,
+  "Satan": satanImg,
+  "Goliath": goliathImg,
+  "Jezebel": jezebelImg,
+  "Pharaoh": pharaohImg,
+  "Judas": judasImg,
+  "Herod": herodImg,
+  "The Ancient of Days": ancientOfDaysImg,
+  "Elijah": elijahImg,
+  "The Beast": beastImg
+};
+
 const characters = [
   { id: "char_0001", name: "Michael", health: 800, attack: 220, defense: 150, spirit: 400, alignment: "Good" },
   { id: "char_0002", name: "David", health: 700, attack: 180, defense: 120, spirit: 350, alignment: "Good" },
@@ -231,29 +266,80 @@ const ArcadeFighting = () => {
           <div className="space-y-8">
             <div>
               <h2 className="text-2xl font-semibold mb-4 text-center">Select Your Warrior</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                 {characters.map((char) => (
                   <Card
                     key={char.id}
-                    className={`p-4 cursor-pointer transition-all hover:scale-105 ${
-                      player?.id === char.id ? "ring-2 ring-primary shadow-glow" : ""
+                    className={`relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 group ${
+                      player?.id === char.id ? "ring-4 ring-primary shadow-[0_0_30px_rgba(var(--primary),0.6)]" : ""
                     } ${char.alignment === "Evil" ? "border-destructive/50" : "border-primary/50"} ${
                       char.unlockable ? "border-accent/70 shadow-[0_0_20px_rgba(var(--accent),0.4)]" : ""
                     }`}
                     onClick={() => selectCharacter(char, true)}
+                    style={{
+                      background: char.alignment === "Evil" 
+                        ? "linear-gradient(135deg, rgba(239,68,68,0.1), rgba(0,0,0,0.3))" 
+                        : "linear-gradient(135deg, rgba(var(--primary),0.1), rgba(0,0,0,0.2))"
+                    }}
                   >
-                    {char.unlockable && (
-                      <Badge className="mb-2 w-full bg-accent/90 animate-pulse text-xs">
-                        🔒 UNLOCKABLE
-                      </Badge>
-                    )}
-                    <Badge className="mb-2" variant={char.alignment === "Good" ? "default" : "destructive"}>
-                      {char.alignment}
-                    </Badge>
-                    <h3 className="font-bold text-center mb-2">{char.name}</h3>
-                    <div className="text-xs space-y-1">
-                      <p className="text-muted-foreground">ATK: {char.attack}</p>
-                      <p className="text-muted-foreground">DEF: {char.defense}</p>
+                    {/* Character Image with animation */}
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={characterImages[char.name]}
+                        alt={char.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 animate-[float_3s_ease-in-out_infinite]"
+                        style={{
+                          filter: player?.id === char.id 
+                            ? "brightness(1.2) contrast(1.1) drop-shadow(0 0 10px rgba(var(--primary),0.6))" 
+                            : "brightness(0.9)",
+                          animationDelay: `${Math.random() * 2}s`
+                        }}
+                      />
+                      {/* Gradient overlay */}
+                      <div className={`absolute inset-0 bg-gradient-to-t ${
+                        char.alignment === "Evil" 
+                          ? "from-destructive/80 via-destructive/20 to-transparent" 
+                          : "from-primary/80 via-primary/20 to-transparent"
+                      } group-hover:opacity-90 transition-opacity`} />
+                      
+                      {/* Unlockable badge */}
+                      {char.unlockable && (
+                        <Badge className="absolute top-2 left-2 bg-accent/90 animate-pulse text-xs shadow-lg">
+                          🔒 UNLOCKABLE
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Character Info */}
+                    <div className="p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Badge variant={char.alignment === "Good" ? "default" : "destructive"} className="text-xs">
+                          {char.alignment}
+                        </Badge>
+                        {player?.id === char.id && (
+                          <Badge className="bg-primary animate-pulse">SELECTED</Badge>
+                        )}
+                      </div>
+                      <h3 className="font-bold text-center text-lg">{char.name}</h3>
+                      <div className="text-xs space-y-1 pt-2 border-t border-border">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">ATK:</span>
+                          <span className="font-semibold">{char.attack}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">DEF:</span>
+                          <span className="font-semibold">{char.defense}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Glow effect on hover */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <div className={`absolute inset-0 ${
+                        char.alignment === "Evil" 
+                          ? "shadow-[inset_0_0_30px_rgba(239,68,68,0.3)]" 
+                          : "shadow-[inset_0_0_30px_rgba(var(--primary),0.3)]"
+                      }`} />
                     </div>
                   </Card>
                 ))}
@@ -262,29 +348,80 @@ const ArcadeFighting = () => {
 
             <div>
               <h2 className="text-2xl font-semibold mb-4 text-center">Select Opponent</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                 {characters.map((char) => (
                   <Card
                     key={char.id}
-                    className={`p-4 cursor-pointer transition-all hover:scale-105 ${
-                      opponent?.id === char.id ? "ring-2 ring-destructive shadow-glow" : ""
+                    className={`relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 group ${
+                      opponent?.id === char.id ? "ring-4 ring-destructive shadow-[0_0_30px_rgba(239,68,68,0.6)]" : ""
                     } ${char.alignment === "Evil" ? "border-destructive/50" : "border-primary/50"} ${
                       char.unlockable ? "border-accent/70 shadow-[0_0_20px_rgba(var(--accent),0.4)]" : ""
                     }`}
                     onClick={() => selectCharacter(char, false)}
+                    style={{
+                      background: char.alignment === "Evil" 
+                        ? "linear-gradient(135deg, rgba(239,68,68,0.1), rgba(0,0,0,0.3))" 
+                        : "linear-gradient(135deg, rgba(var(--primary),0.1), rgba(0,0,0,0.2))"
+                    }}
                   >
-                    {char.unlockable && (
-                      <Badge className="mb-2 w-full bg-accent/90 animate-pulse text-xs">
-                        🔒 UNLOCKABLE
-                      </Badge>
-                    )}
-                    <Badge className="mb-2" variant={char.alignment === "Good" ? "default" : "destructive"}>
-                      {char.alignment}
-                    </Badge>
-                    <h3 className="font-bold text-center mb-2">{char.name}</h3>
-                    <div className="text-xs space-y-1">
-                      <p className="text-muted-foreground">ATK: {char.attack}</p>
-                      <p className="text-muted-foreground">DEF: {char.defense}</p>
+                    {/* Character Image with animation */}
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={characterImages[char.name]}
+                        alt={char.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 animate-[float_3s_ease-in-out_infinite]"
+                        style={{
+                          filter: opponent?.id === char.id 
+                            ? "brightness(1.2) contrast(1.1) drop-shadow(0 0 10px rgba(239,68,68,0.6))" 
+                            : "brightness(0.9)",
+                          animationDelay: `${Math.random() * 2}s`
+                        }}
+                      />
+                      {/* Gradient overlay */}
+                      <div className={`absolute inset-0 bg-gradient-to-t ${
+                        char.alignment === "Evil" 
+                          ? "from-destructive/80 via-destructive/20 to-transparent" 
+                          : "from-primary/80 via-primary/20 to-transparent"
+                      } group-hover:opacity-90 transition-opacity`} />
+                      
+                      {/* Unlockable badge */}
+                      {char.unlockable && (
+                        <Badge className="absolute top-2 left-2 bg-accent/90 animate-pulse text-xs shadow-lg">
+                          🔒 UNLOCKABLE
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Character Info */}
+                    <div className="p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Badge variant={char.alignment === "Good" ? "default" : "destructive"} className="text-xs">
+                          {char.alignment}
+                        </Badge>
+                        {opponent?.id === char.id && (
+                          <Badge className="bg-destructive animate-pulse">SELECTED</Badge>
+                        )}
+                      </div>
+                      <h3 className="font-bold text-center text-lg">{char.name}</h3>
+                      <div className="text-xs space-y-1 pt-2 border-t border-border">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">ATK:</span>
+                          <span className="font-semibold">{char.attack}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">DEF:</span>
+                          <span className="font-semibold">{char.defense}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Glow effect on hover */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <div className={`absolute inset-0 ${
+                        char.alignment === "Evil" 
+                          ? "shadow-[inset_0_0_30px_rgba(239,68,68,0.3)]" 
+                          : "shadow-[inset_0_0_30px_rgba(var(--primary),0.3)]"
+                      }`} />
                     </div>
                   </Card>
                 ))}
