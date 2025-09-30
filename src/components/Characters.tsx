@@ -138,6 +138,138 @@ const characters = [
       { name: "Rally the Builders", type: "Passive", description: "Increases team defense and restores structures/shields over time", cooldown: "N/A" }
     ],
     lore: "Nehemiah left comfort and security to rebuild Jerusalem's broken walls in just 52 days. Despite threats, mockery, and opposition, his unwavering determination and organizational brilliance unified the people. His defensive mastery makes him an invaluable protector on any battlefield."
+  },
+  {
+    id: "char_0007",
+    name: "Satan",
+    alignment: "Evil",
+    role: "Deceiver/Destroyer",
+    rarity: "Divine",
+    description: "The adversary, the fallen angel who wages war against God and mankind.",
+    scripture: ["Isaiah 14:12-15", "Ezekiel 28:12-17", "Revelation 12:9"],
+    stats: {
+      health: 950,
+      attack: 240,
+      defense: 180,
+      spirit: 580,
+      agility: 170,
+      wisdom: 450
+    },
+    abilities: [
+      { name: "Temptation", type: "Active", description: "Corrupts enemy abilities and drains spirit continuously", cooldown: "16s" },
+      { name: "Father of Lies", type: "Passive", description: "All attacks have a chance to confuse and misdirect opponents", cooldown: "N/A" }
+    ],
+    lore: "Once Lucifer, the morning star, Satan fell from heaven through pride. As the adversary and accuser, he seeks to devour and destroy. His cunning and malice know no bounds, making him the ultimate enemy in spiritual warfare."
+  },
+  {
+    id: "char_0008",
+    name: "Goliath",
+    alignment: "Evil",
+    role: "Giant Warrior",
+    rarity: "Epic",
+    description: "The Philistine champion, a giant warrior of immense strength and intimidation.",
+    scripture: ["1 Samuel 17:4-7", "1 Samuel 17:23-24"],
+    stats: {
+      health: 900,
+      attack: 280,
+      defense: 220,
+      spirit: 200,
+      agility: 70,
+      wisdom: 110
+    },
+    abilities: [
+      { name: "Giant's Wrath", type: "Active", description: "Devastating ground slam that stuns nearby enemies", cooldown: "14s" },
+      { name: "Intimidating Presence", type: "Passive", description: "Reduces enemy attack power when nearby", cooldown: "N/A" }
+    ],
+    lore: "Standing over nine feet tall and clad in bronze armor, Goliath terrorized Israel for forty days. His massive size and brutal strength made him seemingly invincible, until he met his match in a shepherd boy with faith."
+  },
+  {
+    id: "char_0009",
+    name: "Jezebel",
+    alignment: "Evil",
+    role: "Queen Sorceress",
+    rarity: "Legendary",
+    description: "The wicked queen who promoted Baal worship and persecuted God's prophets.",
+    scripture: ["1 Kings 16:31", "1 Kings 19:1-2", "2 Kings 9:30-37"],
+    stats: {
+      health: 680,
+      attack: 170,
+      defense: 140,
+      spirit: 420,
+      agility: 130,
+      wisdom: 380
+    },
+    abilities: [
+      { name: "Witchcraft", type: "Active", description: "Curses target with damage over time and reduced healing", cooldown: "15s" },
+      { name: "Royal Manipulation", type: "Passive", description: "Steals a portion of damage dealt to allies", cooldown: "N/A" }
+    ],
+    lore: "As queen of Israel, Jezebel led the nation into Baal worship and orchestrated the murder of God's prophets. Her name has become synonymous with spiritual seduction and false teaching. Her wickedness was legendary, and her end was prophesied and gruesome."
+  },
+  {
+    id: "char_0010",
+    name: "Pharaoh",
+    alignment: "Evil",
+    role: "Tyrant King",
+    rarity: "Legendary",
+    description: "The Egyptian king who enslaved Israel and hardened his heart against God.",
+    scripture: ["Exodus 5:2", "Exodus 7-14"],
+    stats: {
+      health: 820,
+      attack: 200,
+      defense: 190,
+      spirit: 300,
+      agility: 100,
+      wisdom: 250
+    },
+    abilities: [
+      { name: "Plague Caller", type: "Active", description: "Summons a plague that damages and weakens all enemies", cooldown: "20s" },
+      { name: "Hardened Heart", type: "Passive", description: "Becomes more resistant to damage as health decreases", cooldown: "N/A" }
+    ],
+    lore: "The Pharaoh who knew not Joseph enslaved the Hebrew people for generations. Despite witnessing ten devastating plagues, he hardened his heart against God repeatedly. His pride and stubbornness led to his army's destruction in the Red Sea."
+  },
+  {
+    id: "char_0011",
+    name: "Judas Iscariot",
+    alignment: "Evil",
+    role: "Betrayer/Assassin",
+    rarity: "Rare",
+    description: "The disciple who betrayed Jesus for thirty pieces of silver.",
+    scripture: ["Matthew 26:14-16", "Matthew 26:47-50", "Matthew 27:3-5"],
+    stats: {
+      health: 650,
+      attack: 210,
+      defense: 110,
+      spirit: 250,
+      agility: 160,
+      wisdom: 200
+    },
+    abilities: [
+      { name: "Kiss of Betrayal", type: "Active", description: "Backstab attack dealing massive damage from behind", cooldown: "12s" },
+      { name: "Greed", type: "Passive", description: "Gains bonus attack power for each enemy defeated", cooldown: "N/A" }
+    ],
+    lore: "One of the twelve disciples, Judas walked with Jesus for three years yet betrayed Him for silver. His kiss in the Garden of Gethsemane marked the Savior for arrest. Consumed by guilt, he met a tragic end, his name forever synonymous with treachery."
+  },
+  {
+    id: "char_0012",
+    name: "Herod",
+    alignment: "Evil",
+    role: "Cruel Monarch",
+    rarity: "Epic",
+    description: "The paranoid king who ordered the massacre of innocent children.",
+    scripture: ["Matthew 2:16-18", "Luke 23:8-11"],
+    stats: {
+      health: 750,
+      attack: 180,
+      defense: 160,
+      spirit: 280,
+      agility: 90,
+      wisdom: 220
+    },
+    abilities: [
+      { name: "Massacre", type: "Active", description: "Area attack that hits all nearby enemies with cruel efficiency", cooldown: "18s" },
+      { name: "Paranoid Fury", type: "Passive", description: "Attack speed increases when health is below 50%", cooldown: "N/A" }
+    ],
+    lore: "King Herod the Great ruled with an iron fist, paranoid of losing power. When he heard of a newborn king, he ordered all male children under two in Bethlehem killed. His cruelty and fear drove him to unspeakable acts, yet he could not thwart God's plan."
   }
 ];
 
