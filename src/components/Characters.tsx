@@ -72,6 +72,72 @@ const characters = [
       { name: "Divine Authority", type: "Passive", description: "Boosts allied attack speed", cooldown: "N/A" }
     ],
     lore: "Deborah served as both prophet and judge, leading Israel with wisdom and courage. Her strategic brilliance and unwavering faith led to decisive victories against overwhelming odds."
+  },
+  {
+    id: "char_0004",
+    name: "Solomon",
+    alignment: "Good",
+    role: "Sage/Support",
+    rarity: "Legendary",
+    description: "The wisest king who ever lived, builder of the Temple, blessed with divine insight.",
+    scripture: ["1 Kings 3:12", "1 Kings 4:29-34", "Proverbs 1:1"],
+    stats: {
+      health: 650,
+      attack: 130,
+      defense: 140,
+      spirit: 380,
+      agility: 90,
+      wisdom: 500
+    },
+    abilities: [
+      { name: "Judgment of Solomon", type: "Active", description: "Reveals truth and weakens enemy resolve", cooldown: "18s" },
+      { name: "Wisdom's Blessing", type: "Passive", description: "Grants allies increased XP gain and resource efficiency", cooldown: "N/A" }
+    ],
+    lore: "King Solomon was granted divine wisdom beyond all others. His judgments were legendary, his wealth unmatched, and his temple stood as a monument to faith. In battle, his wisdom turns the tide through strategy rather than brute force."
+  },
+  {
+    id: "char_0005",
+    name: "Jesus",
+    alignment: "Good",
+    role: "Divine Savior/Healer",
+    rarity: "Divine",
+    description: "The Son of God, Messiah and Redeemer, wielding ultimate divine authority.",
+    scripture: ["John 1:1-14", "Matthew 28:18", "Revelation 19:16"],
+    stats: {
+      health: 1000,
+      attack: 250,
+      defense: 200,
+      spirit: 600,
+      agility: 150,
+      wisdom: 500
+    },
+    abilities: [
+      { name: "Resurrection Power", type: "Ultimate", description: "Revives fallen allies with full health and grants invulnerability", cooldown: "180s" },
+      { name: "Divine Presence", type: "Passive", description: "Continuously heals all allies and purifies negative effects", cooldown: "N/A" }
+    ],
+    lore: "Jesus Christ stands as the ultimate expression of divine love and power. As both fully God and fully human, He brings salvation, healing, and redemption. His sacrifice and resurrection conquered death itself, and His presence on the battlefield ensures victory over all darkness."
+  },
+  {
+    id: "char_0006",
+    name: "Nehemiah",
+    alignment: "Good",
+    role: "Builder/Defender",
+    rarity: "Epic",
+    description: "Cupbearer turned governor who rebuilt Jerusalem's walls against all opposition.",
+    scripture: ["Nehemiah 2:17-18", "Nehemiah 4:14", "Nehemiah 6:15-16"],
+    stats: {
+      health: 720,
+      attack: 160,
+      defense: 240,
+      spirit: 320,
+      agility: 100,
+      wisdom: 280
+    },
+    abilities: [
+      { name: "Fortify Walls", type: "Active", description: "Creates protective barrier that absorbs damage for all allies", cooldown: "20s" },
+      { name: "Rally the Builders", type: "Passive", description: "Increases team defense and restores structures/shields over time", cooldown: "N/A" }
+    ],
+    lore: "Nehemiah left comfort and security to rebuild Jerusalem's broken walls in just 52 days. Despite threats, mockery, and opposition, his unwavering determination and organizational brilliance unified the people. His defensive mastery makes him an invaluable protector on any battlefield."
   }
 ];
 
