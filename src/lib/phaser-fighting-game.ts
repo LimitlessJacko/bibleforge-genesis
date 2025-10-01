@@ -13,7 +13,7 @@ export interface FighterConfig {
   alignment: 'Good' | 'Evil';
 }
 
-export class FighterSprite extends Phaser.Physics.Matter.Sprite {
+export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
   public fighterName: string;
   public engineChar: EngineCharacter;
   public isPlayer: boolean;
@@ -35,7 +35,9 @@ export class FighterSprite extends Phaser.Physics.Matter.Sprite {
     config: FighterConfig,
     isPlayer: boolean
   ) {
-    super(scene.matter.world, x, y, config.spriteKey);
+    super(scene, x, y, config.spriteKey);
+    scene.add.existing(this);
+    scene.physics.add.existing(this);
     
     this.fighterName = config.name;
     this.isPlayer = isPlayer;
@@ -52,15 +54,16 @@ export class FighterSprite extends Phaser.Physics.Matter.Sprite {
       facing: isPlayer ? "right" : "left"
     };
 
-    // Physics setup
-    this.setFixedRotation();
-    this.setFriction(0.1);
-    this.setFrictionAir(0.01);
-    this.setBounce(0);
+    // Physics setup - Arcade style
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    body.setCollideWorldBounds(true);
+    body.setDragX(500);
+    body.setMaxVelocity(400, 800);
     this.setScale(2);
 
-    // Attack hitbox (invisible) - no physics needed, just visual
+    // Attack hitbox (invisible)
     this.attackBox = scene.add.rectangle(x, y, 60, 80, 0xff0000, 0);
+    scene.physics.add.existing(this.attackBox);
     
     // UI elements
     const barY = isPlayer ? 30 : 30;
@@ -79,7 +82,6 @@ export class FighterSprite extends Phaser.Physics.Matter.Sprite {
       strokeThickness: 4
     }).setOrigin(0.5);
 
-    scene.add.existing(this);
   }
 
   updateHealthBar(x: number, y: number) {
@@ -229,10 +231,9 @@ export class FighterSprite extends Phaser.Physics.Matter.Sprite {
       15,
       0x00ffff
     );
-    
-    // Manually move projectile using Matter physics
-    this.scene.matter.add.gameObject(projectile);
-    (projectile.body as MatterJS.BodyType).velocity.x = this.facing * 8;
+    this.scene.physics.add.existing(projectile);
+    const body = projectile.body as Phaser.Physics.Arcade.Body;
+    body.setVelocityX(this.facing * 400);
     
     // Destroy after 2 seconds
     this.scene.time.delayedCall(2000, () => projectile.destroy());
@@ -366,7 +367,7 @@ export class FightingGameScene extends Phaser.Scene {
       0x1a1a2e
     );
 
-    // Ground
+    // Ground platform
     const ground = this.add.rectangle(
       this.scale.width / 2,
       this.scale.height - 50,
@@ -374,7 +375,7 @@ export class FightingGameScene extends Phaser.Scene {
       100,
       0x2d4356
     );
-    this.matter.add.gameObject(ground, { isStatic: true });
+    this.physics.add.existing(ground, true); // true = static body
 
     // Create fighters
     this.player = new FighterSprite(
@@ -407,8 +408,23 @@ export class FightingGameScene extends Phaser.Scene {
     };
 
     // Collision detection
-    this.matter.world.on('collisionstart', (event: any) => {
-      this.handleCollision(event);
+    this.physics.add.collider(this.player, ground);
+    this.physics.add.collider(this.opponent, ground);
+    this.physics.add.overlap(this.player.attackBox, this.opponent, () => {
+      if (this.player.hitboxActive && !this.opponent.isAttacking) {
+        const damage = 10;
+        this.opponent.takeDamage(damage, 200);
+        this.player.engineChar.comboCount++;
+        this.player.comboText.setText(`${this.player.engineChar.comboCount} HIT COMBO!`);
+        this.player.comboText.setVisible(true);
+      }
+    });
+    this.physics.add.overlap(this.opponent.attackBox, this.player, () => {
+      if (this.opponent.hitboxActive && !this.player.isAttacking) {
+        const damage = 10;
+        this.player.takeDamage(damage, 200);
+        this.opponent.engineChar.comboCount++;
+      }
     });
 
     // Round text
@@ -438,23 +454,24 @@ export class FightingGameScene extends Phaser.Scene {
     if (this.gameOver) return;
 
     // Player controls
+    const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
     if (this.cursors.left.isDown) {
-      this.player.setVelocityX(-5);
+      playerBody.setVelocityX(-200);
       this.player.facing = -1;
       this.player.setFlipX(true);
       this.player.addInput('left');
     } else if (this.cursors.right.isDown) {
-      this.player.setVelocityX(5);
+      playerBody.setVelocityX(200);
       this.player.facing = 1;
       this.player.setFlipX(false);
       this.player.addInput('right');
     } else {
-      this.player.setVelocityX(0);
+      playerBody.setVelocityX(0);
     }
 
     if (Phaser.Input.Keyboard.JustDown(this.cursors.up!)) {
-      if (!this.player.engineChar.inAir) {
-        this.player.setVelocityY(-12);
+      if (playerBody.touching.down) {
+        playerBody.setVelocityY(-500);
         this.player.engineChar.inAir = true;
       }
     }

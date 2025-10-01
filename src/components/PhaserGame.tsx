@@ -23,9 +23,9 @@ export const PhaserGame = ({ playerConfig, opponentConfig, arenaKey, onGameEnd }
       parent: containerRef.current,
       backgroundColor: '#1a1a2e',
       physics: {
-        default: 'matter',
-        matter: {
-          gravity: { x: 0, y: 0.5 },
+        default: 'arcade',
+        arcade: {
+          gravity: { x: 0, y: 800 },
           debug: false
         }
       },
