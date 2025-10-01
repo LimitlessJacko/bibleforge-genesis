@@ -1,79 +1,164 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Swords, Heart, Zap, Shield, Flame } from "lucide-react";
+import { ArrowLeft, Swords, Heart, Zap, Shield, Flame, Crown, Sparkles } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 // Import character images
-import jesusImg from "@/assets/characters/jesus.jpg";
+import mosesImg from "@/assets/characters/moses.jpg";
 import davidImg from "@/assets/characters/david.jpg";
-import solomonImg from "@/assets/characters/solomon.jpg";
-import deborahImg from "@/assets/characters/deborah.jpg";
-import nehemiahImg from "@/assets/characters/nehemiah.jpg";
+import estherImg from "@/assets/characters/esther.jpg";
 import elijahImg from "@/assets/characters/elijah.jpg";
+import maryImg from "@/assets/characters/mary.jpg";
 import michaelImg from "@/assets/characters/michael.jpg";
-import ancientOfDaysImg from "@/assets/characters/ancient-of-days.jpg";
-import satanImg from "@/assets/characters/satan.jpg";
-import goliathImg from "@/assets/characters/goliath.jpg";
 import pharaohImg from "@/assets/characters/pharaoh.jpg";
+import goliathImg from "@/assets/characters/goliath.jpg";
 import jezebelImg from "@/assets/characters/jezebel.jpg";
-import judasImg from "@/assets/characters/judas.jpg";
+import nebuchadnezzarImg from "@/assets/characters/nebuchadnezzar.jpg";
 import herodImg from "@/assets/characters/herod.jpg";
-import beastImg from "@/assets/characters/beast.jpg";
+import satanImg from "@/assets/characters/satan.jpg";
+import jesusImg from "@/assets/characters/jesus.jpg";
+import paulImg from "@/assets/characters/paul.jpg";
+import luciferImg from "@/assets/characters/lucifer.jpg";
+
+// Import booster images
+import holySpiritImg from "@/assets/boosters/holy-spirit.jpg";
+import armorOfGodImg from "@/assets/boosters/armor-of-god.jpg";
+
+// Import arena images
+import redSeaArena from "@/assets/arenas/red-sea.jpg";
+import jerusalemTempleArena from "@/assets/arenas/jerusalem-temple.jpg";
+import valleyOfElahArena from "@/assets/arenas/valley-of-elah.jpg";
 
 const characterImages: { [key: string]: string } = {
-  "Michael": michaelImg,
+  "Moses": mosesImg,
   "David": davidImg,
-  "Deborah": deborahImg,
-  "Solomon": solomonImg,
-  "Jesus": jesusImg,
-  "Nehemiah": nehemiahImg,
-  "Satan": satanImg,
+  "Esther": estherImg,
+  "Elijah": elijahImg,
+  "Mary": maryImg,
+  "Michael": michaelImg,
+  "Pharaoh": pharaohImg,
   "Goliath": goliathImg,
   "Jezebel": jezebelImg,
-  "Pharaoh": pharaohImg,
-  "Judas": judasImg,
+  "Nebuchadnezzar": nebuchadnezzarImg,
   "Herod": herodImg,
-  "The Ancient of Days": ancientOfDaysImg,
-  "Elijah": elijahImg,
-  "The Beast": beastImg
+  "Satan": satanImg,
+  "Jesus": jesusImg,
+  "Paul": paulImg,
+  "Lucifer": luciferImg
 };
 
+type Booster = {
+  id: string;
+  name: string;
+  image: string;
+  effect: "speed" | "defense" | "attack";
+  multiplier: number;
+  description: string;
+};
+
+const boosters: Booster[] = [
+  { 
+    id: "boost_1", 
+    name: "Holy Spirit", 
+    image: holySpiritImg, 
+    effect: "speed", 
+    multiplier: 1.3,
+    description: "Increases attack speed and meter gain"
+  },
+  { 
+    id: "boost_2", 
+    name: "Armor of God", 
+    image: armorOfGodImg, 
+    effect: "defense", 
+    multiplier: 1.5,
+    description: "Reduces damage taken significantly"
+  }
+];
+
+const arenas = [
+  { id: "arena_1", name: "Red Sea", image: redSeaArena },
+  { id: "arena_2", name: "Jerusalem Temple", image: jerusalemTempleArena },
+  { id: "arena_3", name: "Valley of Elah", image: valleyOfElahArena }
+];
+
 const characters = [
-  { id: "char_0001", name: "Michael", health: 800, attack: 220, defense: 150, spirit: 400, alignment: "Good" },
-  { id: "char_0002", name: "David", health: 700, attack: 180, defense: 120, spirit: 350, alignment: "Good" },
-  { id: "char_0003", name: "Deborah", health: 650, attack: 190, defense: 130, spirit: 380, alignment: "Good" },
-  { id: "char_0004", name: "Solomon", health: 650, attack: 130, defense: 140, spirit: 380, alignment: "Good" },
-  { id: "char_0005", name: "Jesus", health: 1000, attack: 250, defense: 200, spirit: 600, alignment: "Good" },
-  { id: "char_0006", name: "Nehemiah", health: 720, attack: 160, defense: 240, spirit: 320, alignment: "Good" },
-  { id: "char_0007", name: "Satan", health: 950, attack: 240, defense: 180, spirit: 580, alignment: "Evil" },
-  { id: "char_0008", name: "Goliath", health: 900, attack: 280, defense: 220, spirit: 200, alignment: "Evil" },
-  { id: "char_0009", name: "Jezebel", health: 680, attack: 170, defense: 140, spirit: 420, alignment: "Evil" },
-  { id: "char_0010", name: "Pharaoh", health: 820, attack: 200, defense: 190, spirit: 300, alignment: "Evil" },
-  { id: "char_0011", name: "Judas", health: 650, attack: 210, defense: 110, spirit: 250, alignment: "Evil" },
-  { id: "char_0012", name: "Herod", health: 750, attack: 180, defense: 160, spirit: 280, alignment: "Evil" },
-  { id: "char_0013", name: "The Ancient of Days", health: 9999, attack: 999, defense: 999, spirit: 9999, alignment: "Good", unlockable: true },
-  { id: "char_0014", name: "Elijah", health: 850, attack: 320, defense: 200, spirit: 750, alignment: "Good", unlockable: true },
-  { id: "char_0015", name: "The Beast", health: 1200, attack: 350, defense: 280, spirit: 666, alignment: "Evil", unlockable: true }
+  // Good Characters
+  { id: "char_0001", name: "Moses", health: 800, attack: 200, defense: 170, spirit: 450, alignment: "Good" },
+  { id: "char_0002", name: "David", health: 700, attack: 220, defense: 140, spirit: 380, alignment: "Good" },
+  { id: "char_0003", name: "Esther", health: 650, attack: 180, defense: 150, spirit: 400, alignment: "Good" },
+  { id: "char_0004", name: "Elijah", health: 750, attack: 240, defense: 160, spirit: 500, alignment: "Good" },
+  { id: "char_0005", name: "Mary", health: 700, attack: 160, defense: 180, spirit: 480, alignment: "Good" },
+  { id: "char_0006", name: "Michael", health: 850, attack: 260, defense: 200, spirit: 520, alignment: "Good" },
+  
+  // Evil Characters
+  { id: "char_0007", name: "Pharaoh", health: 800, attack: 210, defense: 180, spirit: 350, alignment: "Evil" },
+  { id: "char_0008", name: "Goliath", health: 950, attack: 300, defense: 220, spirit: 250, alignment: "Evil" },
+  { id: "char_0009", name: "Jezebel", health: 700, attack: 190, defense: 150, spirit: 420, alignment: "Evil" },
+  { id: "char_0010", name: "Nebuchadnezzar", health: 850, attack: 230, defense: 200, spirit: 380, alignment: "Evil" },
+  { id: "char_0011", name: "Herod", health: 750, attack: 200, defense: 170, spirit: 340, alignment: "Evil" },
+  { id: "char_0012", name: "Satan", health: 900, attack: 280, defense: 190, spirit: 550, alignment: "Evil" },
+  
+  // Unlockable Characters
+  { id: "char_0013", name: "Jesus", health: 1000, attack: 350, defense: 250, spirit: 999, alignment: "Good", unlockable: true },
+  { id: "char_0014", name: "Paul", health: 800, attack: 270, defense: 210, spirit: 600, alignment: "Good", unlockable: true },
+  { id: "char_0015", name: "Lucifer", health: 950, attack: 320, defense: 230, spirit: 666, alignment: "Evil", unlockable: true }
 ];
 
 const ArcadeFighting = () => {
   const navigate = useNavigate();
-  const [gameState, setGameState] = useState<"selection" | "battle" | "victory">("selection");
+  const [gameState, setGameState] = useState<"selection" | "booster" | "arena" | "battle" | "victory">("selection");
   const [player, setPlayer] = useState<typeof characters[0] | null>(null);
   const [opponent, setOpponent] = useState<typeof characters[0] | null>(null);
+  const [playerBooster, setPlayerBooster] = useState<Booster | null>(null);
+  const [selectedArena, setSelectedArena] = useState<typeof arenas[0] | null>(null);
   const [playerHP, setPlayerHP] = useState(100);
   const [opponentHP, setOpponentHP] = useState(100);
   const [playerSpirit, setPlayerSpirit] = useState(100);
   const [playerMeter, setPlayerMeter] = useState(0);
   const [opponentMeter, setOpponentMeter] = useState(0);
   const [comboCount, setComboCount] = useState(0);
+  const [highestCombo, setHighestCombo] = useState(0);
   const [comboTimer, setComboTimer] = useState<NodeJS.Timeout | null>(null);
   const [battleLog, setBattleLog] = useState<string[]>([]);
   const [canComboBreak, setCanComboBreak] = useState(false);
+  const [unlockedCharacters, setUnlockedCharacters] = useState<string[]>([]);
+  const [wins, setWins] = useState(0);
+  
+  // Load unlocked characters and wins from localStorage
+  useEffect(() => {
+    const savedUnlocks = localStorage.getItem('spiritualWarfare_unlocks');
+    const savedWins = localStorage.getItem('spiritualWarfare_wins');
+    if (savedUnlocks) setUnlockedCharacters(JSON.parse(savedUnlocks));
+    if (savedWins) setWins(parseInt(savedWins));
+  }, []);
+  
+  // Gamepad support
+  useEffect(() => {
+    const handleGamepad = () => {
+      const gamepads = navigator.getGamepads();
+      const gamepad = gamepads[0];
+      
+      if (gamepad && gameState === "battle") {
+        // Button 0 (A/Cross) - Light Attack
+        if (gamepad.buttons[0]?.pressed) lightAttack();
+        // Button 1 (B/Circle) - Heavy Attack
+        if (gamepad.buttons[1]?.pressed) heavyAttack();
+        // Button 2 (X/Square) - Launcher
+        if (gamepad.buttons[2]?.pressed) launcherAttack();
+        // Button 3 (Y/Triangle) - Combo Breaker
+        if (gamepad.buttons[3]?.pressed) comboBreaker();
+        // Button 5 (RB/R1) - Hyper Combo
+        if (gamepad.buttons[5]?.pressed) hyperCombo();
+      }
+    };
+    
+    const interval = setInterval(handleGamepad, 100);
+    return () => clearInterval(interval);
+  }, [gameState, playerMeter, canComboBreak]);
 
   // Combo timer effect
   useEffect(() => {
@@ -81,8 +166,25 @@ const ArcadeFighting = () => {
       if (comboTimer) clearTimeout(comboTimer);
     };
   }, [comboTimer]);
+  
+  // Track highest combo
+  useEffect(() => {
+    if (comboCount > highestCombo) {
+      setHighestCombo(comboCount);
+    }
+  }, [comboCount, highestCombo]);
 
   const selectCharacter = (char: typeof characters[0], isPlayer: boolean) => {
+    // Check if character is locked
+    if (char.unlockable && !unlockedCharacters.includes(char.id)) {
+      toast({
+        title: "Character Locked",
+        description: `Win ${char.alignment === "Good" ? "10" : "15"} battles to unlock ${char.name}!`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (isPlayer) {
       setPlayer(char);
       setPlayerHP(100);
@@ -94,11 +196,22 @@ const ArcadeFighting = () => {
       setOpponentMeter(0);
     }
   };
+  
+  const proceedToBoosterSelection = () => {
+    if (player && opponent) {
+      setGameState("booster");
+    }
+  };
+  
+  const proceedToArenaSelection = () => {
+    setGameState("arena");
+  };
 
   const startBattle = () => {
-    if (player && opponent) {
+    if (player && opponent && selectedArena) {
       setGameState("battle");
       setComboCount(0);
+      setHighestCombo(0);
       setPlayerMeter(0);
       setOpponentMeter(0);
       setBattleLog([`${player.name} vs ${opponent.name} - FIGHT!`]);
@@ -115,7 +228,8 @@ const ArcadeFighting = () => {
 
   const addComboHit = () => {
     setComboCount(prev => prev + 1);
-    setPlayerMeter(prev => Math.min(100, prev + 8));
+    const meterGain = playerBooster?.effect === "speed" ? 12 : 8;
+    setPlayerMeter(prev => Math.min(100, prev + meterGain));
     
     if (comboTimer) clearTimeout(comboTimer);
     const timer = setTimeout(resetCombo, 2000);
@@ -126,10 +240,11 @@ const ArcadeFighting = () => {
     }
   };
 
-  const lightAttack = () => {
+  const lightAttack = useCallback(() => {
     if (!player || !opponent || gameState !== "battle") return;
 
-    const baseDamage = Math.floor((player.attack / opponent.defense) * (Math.random() * 8 + 5));
+    const attackMultiplier = playerBooster?.effect === "attack" ? playerBooster.multiplier : 1;
+    const baseDamage = Math.floor((player.attack / opponent.defense) * (Math.random() * 8 + 5) * attackMultiplier);
     const comboMultiplier = 1 + (comboCount * 0.15);
     const damage = Math.floor(baseDamage * comboMultiplier);
     
@@ -148,18 +263,20 @@ const ArcadeFighting = () => {
     if (comboCount === 0) {
       setTimeout(() => opponentCounterAttack(), 1000);
     }
-  };
+  }, [player, opponent, gameState, comboCount, opponentHP, playerBooster]);
 
-  const heavyAttack = () => {
+  const heavyAttack = useCallback(() => {
     if (!player || !opponent || gameState !== "battle") return;
 
-    const baseDamage = Math.floor((player.attack / opponent.defense) * (Math.random() * 15 + 20));
+    const attackMultiplier = playerBooster?.effect === "attack" ? playerBooster.multiplier : 1;
+    const baseDamage = Math.floor((player.attack / opponent.defense) * (Math.random() * 15 + 20) * attackMultiplier);
     const comboMultiplier = 1 + (comboCount * 0.2);
     const damage = Math.floor(baseDamage * comboMultiplier);
     
     const newOpponentHP = Math.max(0, opponentHP - damage);
     setOpponentHP(newOpponentHP);
-    setPlayerMeter(prev => Math.min(100, prev + 12));
+    const meterGain = playerBooster?.effect === "speed" ? 16 : 12;
+    setPlayerMeter(prev => Math.min(100, prev + meterGain));
     
     resetCombo();
     setBattleLog(prev => [...prev, `${player.name} HEAVY STRIKE! ${damage} damage!`]);
@@ -170,15 +287,17 @@ const ArcadeFighting = () => {
     }
 
     setTimeout(() => opponentCounterAttack(), 1200);
-  };
+  }, [player, opponent, gameState, comboCount, opponentHP, playerBooster]);
 
-  const launcherAttack = () => {
+  const launcherAttack = useCallback(() => {
     if (!player || !opponent || gameState !== "battle") return;
 
-    const damage = Math.floor((player.attack / opponent.defense) * (Math.random() * 12 + 15));
+    const attackMultiplier = playerBooster?.effect === "attack" ? playerBooster.multiplier : 1;
+    const damage = Math.floor((player.attack / opponent.defense) * (Math.random() * 12 + 15) * attackMultiplier);
     const newOpponentHP = Math.max(0, opponentHP - damage);
     setOpponentHP(newOpponentHP);
-    setPlayerMeter(prev => Math.min(100, prev + 10));
+    const meterGain = playerBooster?.effect === "speed" ? 14 : 10;
+    setPlayerMeter(prev => Math.min(100, prev + meterGain));
     
     setBattleLog(prev => [...prev, `${player.name} LAUNCHER! ${damage} damage! Air combo ready!`]);
     
@@ -189,21 +308,22 @@ const ArcadeFighting = () => {
     if (newOpponentHP <= 0) {
       finishBattle(true);
     }
-  };
+  }, [player, opponent, gameState, opponentHP, playerBooster]);
 
-  const comboBreaker = () => {
+  const comboBreaker = useCallback(() => {
     if (!canComboBreak || playerMeter < 20) return;
 
     setPlayerMeter(prev => prev - 20);
     resetCombo();
     setBattleLog(prev => [...prev, `${player.name} COMBO BREAKER! Opponent's combo stopped!`]);
     toast({ title: "C-C-C-COMBO BREAKER!", description: "Combo interrupted!" });
-  };
+  }, [canComboBreak, playerMeter, player]);
 
-  const hyperCombo = () => {
+  const hyperCombo = useCallback(() => {
     if (!player || !opponent || gameState !== "battle" || playerMeter < 100) return;
 
-    const damage = Math.floor((player.attack + player.spirit) * (Math.random() * 0.8 + 1.2));
+    const attackMultiplier = playerBooster?.effect === "attack" ? playerBooster.multiplier : 1;
+    const damage = Math.floor((player.attack + player.spirit) * (Math.random() * 0.8 + 1.2) * attackMultiplier);
     const newOpponentHP = Math.max(0, opponentHP - damage);
     setOpponentHP(newOpponentHP);
     setPlayerMeter(0);
@@ -219,12 +339,13 @@ const ArcadeFighting = () => {
     if (newOpponentHP <= 0) {
       finishBattle(true);
     }
-  };
+  }, [player, opponent, gameState, playerMeter, opponentHP, playerBooster]);
 
   const opponentCounterAttack = () => {
     if (!opponent || !player || gameState !== "battle") return;
 
-    const counterDamage = Math.floor((opponent.attack / player.defense) * (Math.random() * 15 + 10));
+    const defenseMultiplier = playerBooster?.effect === "defense" ? playerBooster.multiplier : 1;
+    const counterDamage = Math.floor((opponent.attack / (player.defense * defenseMultiplier)) * (Math.random() * 15 + 10));
     const newPlayerHP = Math.max(0, playerHP - counterDamage);
     setPlayerHP(newPlayerHP);
     setOpponentMeter(prev => Math.min(100, prev + 10));
@@ -237,10 +358,43 @@ const ArcadeFighting = () => {
 
   const finishBattle = (playerWon: boolean) => {
     setGameState("victory");
-    if (playerWon && comboCount >= 10) {
+    
+    // Update wins and check for unlocks
+    if (playerWon) {
+      const newWins = wins + 1;
+      setWins(newWins);
+      localStorage.setItem('spiritualWarfare_wins', newWins.toString());
+      
+      // Check for character unlocks
+      const newUnlocks = [...unlockedCharacters];
+      let unlockedNewChar = false;
+      
+      if (newWins >= 10 && !newUnlocks.includes("char_0013")) {
+        newUnlocks.push("char_0013"); // Jesus
+        unlockedNewChar = true;
+        toast({ title: "🎉 NEW CHARACTER UNLOCKED!", description: "Jesus is now available!", className: "text-2xl font-bold" });
+      }
+      if (newWins >= 10 && !newUnlocks.includes("char_0014")) {
+        newUnlocks.push("char_0014"); // Paul
+        unlockedNewChar = true;
+        toast({ title: "🎉 NEW CHARACTER UNLOCKED!", description: "Paul is now available!", className: "text-2xl font-bold" });
+      }
+      if (newWins >= 15 && !newUnlocks.includes("char_0015")) {
+        newUnlocks.push("char_0015"); // Lucifer
+        unlockedNewChar = true;
+        toast({ title: "🎉 NEW CHARACTER UNLOCKED!", description: "Lucifer is now available!", className: "text-2xl font-bold" });
+      }
+      
+      if (unlockedNewChar) {
+        setUnlockedCharacters(newUnlocks);
+        localStorage.setItem('spiritualWarfare_unlocks', JSON.stringify(newUnlocks));
+      }
+    }
+    
+    if (playerWon && highestCombo >= 10) {
       toast({ 
         title: "ULTRA COMBO!!!", 
-        description: `${player?.name} achieves a ${comboCount} hit Ultra Combo victory!`,
+        description: `${player?.name} achieves a ${highestCombo} hit Ultra Combo victory!`,
         className: "text-2xl font-bold"
       });
     } else {
@@ -258,9 +412,12 @@ const ArcadeFighting = () => {
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
         </Button>
 
-        <h1 className="text-4xl md:text-5xl font-bold text-center mb-8 text-glow">
-          Arcade Fighting
+        <h1 className="text-4xl md:text-5xl font-bold text-center mb-2 text-glow">
+          Spiritual Warfare
         </h1>
+        <p className="text-center text-muted-foreground mb-8">
+          2D Arcade Fighting • {wins} Wins
+        </p>
 
         {gameState === "selection" && (
           <div className="space-y-8">
@@ -429,17 +586,174 @@ const ArcadeFighting = () => {
             </div>
 
             {player && opponent && (
-              <div className="flex justify-center">
-                <Button size="lg" onClick={startBattle} className="text-lg px-8 animate-pulse">
-                  <Swords className="mr-2 h-5 w-5" /> START BATTLE
+              <div className="flex justify-center gap-4">
+                <Button size="lg" onClick={proceedToBoosterSelection} className="text-lg px-8 animate-pulse">
+                  <Sparkles className="mr-2 h-5 w-5" /> SELECT BOOSTER
                 </Button>
               </div>
             )}
+            
+            <div className="text-center text-sm text-muted-foreground mt-4">
+              Total Wins: <span className="font-bold text-primary">{wins}</span>
+              {wins < 10 && <p className="mt-2">Win {10 - wins} more battles to unlock Jesus & Paul!</p>}
+              {wins >= 10 && wins < 15 && <p className="mt-2">Win {15 - wins} more battles to unlock Lucifer!</p>}
+            </div>
+            
+            {/* Controls Info */}
+            <Card className="max-w-2xl mx-auto p-6 bg-background/50">
+              <h3 className="font-bold text-center mb-4">⌨️ Controls & 🎮 Gamepad</h3>
+              <div className="grid md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="font-semibold mb-2">Gamepad (Auto-detected):</p>
+                  <ul className="space-y-1 text-muted-foreground">
+                    <li>• A/Cross - Light Attack</li>
+                    <li>• B/Circle - Heavy Attack</li>
+                    <li>• X/Square - Launcher</li>
+                    <li>• Y/Triangle - Combo Breaker</li>
+                    <li>• RB/R1 - Hyper Combo</li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-semibold mb-2">Keyboard & Mouse:</p>
+                  <ul className="space-y-1 text-muted-foreground">
+                    <li>• Click buttons to attack</li>
+                    <li>• Select characters with mouse</li>
+                    <li>• Choose boosters & arenas</li>
+                  </ul>
+                </div>
+              </div>
+            </Card>
           </div>
         )}
 
-        {gameState === "battle" && player && opponent && (
-          <div className="max-w-5xl mx-auto space-y-6">
+        {gameState === "booster" && (
+          <div className="space-y-8 animate-fade-in">
+            <h2 className="text-3xl font-semibold text-center text-glow">Select Your Booster</h2>
+            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              <Card
+                className={`cursor-pointer transition-all duration-300 hover:scale-105 group ${
+                  !playerBooster ? "ring-4 ring-primary" : "opacity-50"
+                }`}
+                onClick={() => setPlayerBooster(null)}
+              >
+                <div className="p-6 text-center">
+                  <div className="text-6xl mb-4">🚫</div>
+                  <h3 className="text-xl font-bold mb-2">No Booster</h3>
+                  <p className="text-sm text-muted-foreground">Fight with raw skill</p>
+                </div>
+              </Card>
+              
+              {boosters.map((booster) => (
+                <Card
+                  key={booster.id}
+                  className={`cursor-pointer transition-all duration-300 hover:scale-105 group ${
+                    playerBooster?.id === booster.id ? "ring-4 ring-primary shadow-glow-divine" : ""
+                  }`}
+                  onClick={() => setPlayerBooster(booster)}
+                >
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={booster.image}
+                      alt={booster.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+                  </div>
+                  <div className="p-6 space-y-2">
+                    <h3 className="text-xl font-bold text-center">{booster.name}</h3>
+                    <Badge className="w-full justify-center">{booster.effect.toUpperCase()} +{Math.floor((booster.multiplier - 1) * 100)}%</Badge>
+                    <p className="text-sm text-muted-foreground text-center">{booster.description}</p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+            <div className="flex justify-center gap-4">
+              <Button variant="outline" onClick={() => setGameState("selection")}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Button>
+              <Button size="lg" onClick={proceedToArenaSelection} className="text-lg px-8">
+                <Crown className="mr-2 h-5 w-5" /> SELECT ARENA
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {gameState === "arena" && (
+          <div className="space-y-8 animate-fade-in">
+            <h2 className="text-3xl font-semibold text-center text-glow">Choose Your Battlefield</h2>
+            <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              {arenas.map((arena) => (
+                <Card
+                  key={arena.id}
+                  className={`cursor-pointer transition-all duration-300 hover:scale-105 group ${
+                    selectedArena?.id === arena.id ? "ring-4 ring-primary shadow-glow-divine" : ""
+                  }`}
+                  onClick={() => setSelectedArena(arena)}
+                >
+                  <div className="relative h-64 overflow-hidden">
+                    <img
+                      src={arena.image}
+                      alt={arena.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <h3 className="text-2xl font-bold text-white drop-shadow-lg">{arena.name}</h3>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+            <div className="flex justify-center gap-4">
+              <Button variant="outline" onClick={() => setGameState("booster")}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Button>
+              <Button 
+                size="lg" 
+                onClick={startBattle} 
+                disabled={!selectedArena}
+                className="text-lg px-8 animate-pulse"
+              >
+                <Swords className="mr-2 h-5 w-5" /> START BATTLE
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {gameState === "battle" && player && opponent && selectedArena && (
+          <div 
+            className="max-w-5xl mx-auto space-y-6 relative p-6 rounded-lg"
+            style={{
+              backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url(${selectedArena.image})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+            {/* Arena Name Badge */}
+            <div className="absolute top-2 right-2">
+              <Badge className="bg-background/90 text-lg px-4 py-2">
+                <Crown className="mr-2 h-4 w-4" /> {selectedArena.name}
+              </Badge>
+            </div>
+            
+            {/* Gamepad indicator */}
+            {navigator.getGamepads && navigator.getGamepads()[0] && (
+              <div className="absolute top-2 left-2">
+                <Badge className="bg-accent/90 text-xs px-3 py-1 animate-pulse">
+                  🎮 Gamepad Connected
+                </Badge>
+              </div>
+            )}
+            
+            {/* Booster indicator */}
+            {playerBooster && (
+              <div className="text-center">
+                <Badge className="bg-primary/90 text-sm px-4 py-2 shadow-glow-divine">
+                  <Sparkles className="mr-2 h-4 w-4 inline" />
+                  {playerBooster.name} Active
+                </Badge>
+              </div>
+            )}
             {/* Combo Counter */}
             {comboCount > 0 && (
               <div className="text-center">
@@ -580,24 +894,59 @@ const ArcadeFighting = () => {
               {playerHP > 0 ? "🏆 VICTORY! 🏆" : "💀 DEFEAT 💀"}
             </div>
             
-            {playerHP > 0 && comboCount >= 10 && (
+            {playerHP > 0 && highestCombo >= 10 && (
               <div className="text-4xl font-bold text-accent animate-pulse">
                 ⚡ ULTRA COMBO FINISH! ⚡
               </div>
             )}
 
-            <Card className="max-w-md mx-auto p-6">
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+            <Card className="max-w-2xl mx-auto p-8">
+              <div className="space-y-6">
+                <div className="grid grid-cols-3 gap-6">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Winner</p>
-                    <p className="text-xl font-bold">{playerHP > 0 ? player?.name : opponent?.name}</p>
+                    <p className="text-2xl font-bold">{playerHP > 0 ? player?.name : opponent?.name}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Highest Combo</p>
-                    <p className="text-xl font-bold text-accent">{comboCount} hits</p>
+                    <p className="text-2xl font-bold text-accent">{highestCombo} hits</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Total Wins</p>
+                    <p className="text-2xl font-bold text-primary">{wins}</p>
                   </div>
                 </div>
+                
+                {playerBooster && (
+                  <div className="pt-4 border-t border-border">
+                    <p className="text-sm text-muted-foreground mb-2">Booster Used</p>
+                    <Badge className="text-base px-4 py-2">
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      {playerBooster.name}
+                    </Badge>
+                  </div>
+                )}
+                
+                {playerHP > 0 && (
+                  <div className="pt-4 border-t border-border">
+                    <p className="text-sm text-muted-foreground mb-2">Unlock Progress</p>
+                    <div className="space-y-2">
+                      {wins < 10 && (
+                        <p className="text-sm">
+                          <span className="font-bold">{10 - wins}</span> more wins to unlock Jesus & Paul
+                        </p>
+                      )}
+                      {wins >= 10 && wins < 15 && (
+                        <p className="text-sm">
+                          <span className="font-bold">{15 - wins}</span> more wins to unlock Lucifer
+                        </p>
+                      )}
+                      {wins >= 15 && (
+                        <p className="text-sm font-bold text-accent">All characters unlocked! 🎉</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </Card>
 
@@ -606,8 +955,11 @@ const ArcadeFighting = () => {
                 setGameState("selection");
                 setPlayer(null);
                 setOpponent(null);
+                setPlayerBooster(null);
+                setSelectedArena(null);
                 setBattleLog([]);
                 setComboCount(0);
+                setHighestCombo(0);
               }}>
                 Fight Again
               </Button>
