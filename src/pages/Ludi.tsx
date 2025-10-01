@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Home, Dices, Trophy, Users, Swords, Shield, Zap, Crown } from "lucide-react";
+import { Home, Dices, Trophy, Users, Swords, Shield, Zap, Crown, Volume2, VolumeX } from "lucide-react";
+import { Howl } from "howler";
 
 type PlayerColor = "righteous" | "faithful" | "redeemed" | "sanctified";
 type PiecePosition = number; // -1 = home, 0-51 = board path, 52-57 = final stretch
@@ -74,10 +75,38 @@ export default function Ludi() {
   const [winner, setWinner] = useState<PlayerColor | null>(null);
   const [hasRolled, setHasRolled] = useState(false);
   const [consecutiveSixes, setConsecutiveSixes] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const backgroundMusicRef = useRef<Howl | null>(null);
 
   useEffect(() => {
     checkUnlockStatus();
   }, []);
+
+  // Initialize background music
+  useEffect(() => {
+    if (gameStarted && !backgroundMusicRef.current) {
+      backgroundMusicRef.current = new Howl({
+        src: ['https://cdn.pixabay.com/audio/2022/03/10/audio_4f15ab7fa8.mp3'],
+        loop: true,
+        volume: 0.3,
+        autoplay: true,
+      });
+    }
+
+    return () => {
+      if (backgroundMusicRef.current) {
+        backgroundMusicRef.current.unload();
+        backgroundMusicRef.current = null;
+      }
+    };
+  }, [gameStarted]);
+
+  // Handle mute toggle
+  useEffect(() => {
+    if (backgroundMusicRef.current) {
+      backgroundMusicRef.current.mute(isMuted);
+    }
+  }, [isMuted]);
 
   const checkUnlockStatus = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -450,7 +479,13 @@ export default function Ludi() {
           <h1 className="text-5xl font-bold text-secondary text-glow">
             ⚔️ Spiritual Ludi Battle 🛡️
           </h1>
-          <div className="w-32" />
+          <Button
+            onClick={() => setIsMuted(!isMuted)}
+            variant="outline"
+            size="icon"
+          >
+            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+          </Button>
         </div>
 
         {winner && (
