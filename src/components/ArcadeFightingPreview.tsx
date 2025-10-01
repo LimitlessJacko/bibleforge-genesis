@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Swords, Zap, Trophy, Shield } from "lucide-react";
 import davidVsGoliath from "@/assets/gameplay/david-vs-goliath.png";
-import mosesVsPharaoh from "@/assets/gameplay/moses-vs-pharaoh.png";
 import elijahVsJezebel from "@/assets/gameplay/elijah-vs-jezebel.png";
 import michaelVsLucifer from "@/assets/gameplay/michael-vs-lucifer.png";
 
@@ -89,7 +88,7 @@ const ArcadeFightingPreview = () => {
         {/* Gameplay Screenshots Gallery */}
         <div className="mt-12 space-y-4">
           <h3 className="text-2xl font-bold text-center mb-6">Gameplay Screenshots</h3>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             <div className="rounded-lg overflow-hidden border-4 border-primary/30 shadow-2xl hover-scale">
               <img 
                 src={davidVsGoliath} 
@@ -99,17 +98,6 @@ const ArcadeFightingPreview = () => {
               <div className="p-3 bg-card">
                 <p className="text-sm font-semibold">David vs Goliath</p>
                 <p className="text-xs text-muted-foreground">Classic matchup in ancient arena</p>
-              </div>
-            </div>
-            <div className="rounded-lg overflow-hidden border-4 border-primary/30 shadow-2xl hover-scale">
-              <img 
-                src={mosesVsPharaoh} 
-                alt="Moses vs Pharaoh gameplay with special moves at Red Sea"
-                className="w-full h-auto"
-              />
-              <div className="p-3 bg-card">
-                <p className="text-sm font-semibold">Moses vs Pharaoh</p>
-                <p className="text-xs text-muted-foreground">Special moves at the Red Sea arena</p>
               </div>
             </div>
             <div className="rounded-lg overflow-hidden border-4 border-primary/30 shadow-2xl hover-scale">
