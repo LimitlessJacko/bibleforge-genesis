@@ -11,6 +11,7 @@ import LimitlessBoots from "@/components/LimitlessBoots";
 import Tokenomics from "@/components/Tokenomics";
 import Footer from "@/components/Footer";
 import { AnimationsShowcase } from "@/components/AnimationsShowcase";
+import { LudiUnlock } from "@/components/LudiUnlock";
 import { LogOut, Trophy, User as UserIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
@@ -92,6 +93,7 @@ const Index = () => {
       <Characters />
       <AnimationsShowcase />
       <GameModes />
+      <LudiUnlock />
       <ArcadeFightingPreview />
       <LimitlessBoots />
       <Tokenomics />
