@@ -62,14 +62,18 @@ const Index = () => {
     if (!musicInitialized) {
       // First click - initialize and play
       backgroundMusicRef.current = new Howl({
-        src: ['https://cdn.pixabay.com/audio/2022/03/10/audio_4f15ab7fa8.mp3'],
+        src: ['/music/orchestral-background.mp3'],
         loop: true,
         volume: 0.25,
+        html5: true, // Use HTML5 Audio for better compatibility
         onload: () => {
           console.log('Music loaded successfully');
         },
         onloaderror: (id, error) => {
           console.error('Failed to load music:', error);
+        },
+        onplay: () => {
+          console.log('Music started playing');
         },
       });
       backgroundMusicRef.current.play();
