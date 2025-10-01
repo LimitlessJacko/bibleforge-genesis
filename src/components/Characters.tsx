@@ -505,13 +505,13 @@ const Characters = () => {
           {selectedCharacter && (
             <>
               {selectedCharacter.image && (
-                <div className="relative h-72 -mt-6 -mx-6 mb-4 overflow-hidden bg-gradient-to-b from-background/50 to-background/20">
+                <div className="relative h-72 -mt-6 -mx-6 mb-4 overflow-hidden">
                   <img 
                     src={selectedCharacter.image} 
                     alt={selectedCharacter.name}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-card via-card/70 to-transparent pointer-events-none"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-card via-card/70 to-transparent"></div>
                   <div className="absolute bottom-4 left-6 flex gap-2 flex-wrap">
                     {selectedCharacter.unlockable && (
                       <Badge className="text-lg px-4 py-2 bg-accent/90 animate-pulse">

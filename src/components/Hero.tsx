@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Swords, Shield } from "lucide-react";
+import { Swords, Shield, Crown } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.png";
-import logo from "@/assets/logo.png";
 
 const Hero = () => {
   const scrollToSection = (id: string) => {
@@ -13,11 +12,6 @@ const Hero = () => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Logo - Top Left */}
-      <div className="absolute top-4 left-4 z-20 animate-float">
-        <img src={logo} alt="Spiritual Warfare Logo" className="w-24 h-24 object-contain" />
-      </div>
-
       {/* Background Image with Overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center"
@@ -28,6 +22,9 @@ const Hero = () => {
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center">
+        <div className="animate-float">
+          <Crown className="w-20 h-20 mx-auto mb-6 text-secondary animate-pulse-glow" />
+        </div>
         
         <h1 className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-secondary via-primary to-accent bg-clip-text text-transparent">
           Spiritual Warfare
