@@ -12,6 +12,8 @@ import {
   type InputBuffer, 
   type Character as EngineCharacter 
 } from "@/lib/fighting-engine";
+import { PhaserGame } from "@/components/PhaserGame";
+import type { FighterConfig } from "@/lib/phaser-fighting-game";
 
 // Import character images
 import mosesImg from "@/assets/characters/moses.jpg";
@@ -222,41 +224,16 @@ const ArcadeFighting = () => {
 
   const startBattle = () => {
     if (player && opponent && selectedArena) {
-      // Initialize engine characters
-      const pEngine: EngineCharacter = {
-        ...fightingEngine.createCharacter({
-          health: player.health,
-          attack: player.attack,
-          defense: player.defense
-        }),
-        frameData: fightingEngine.getDefaultFrameData(),
-        position: { x: 150, y: 400 },
-        facing: "right"
-      };
-
-      const oEngine: EngineCharacter = {
-        ...fightingEngine.createCharacter({
-          health: opponent.health,
-          attack: opponent.attack,
-          defense: opponent.defense
-        }),
-        frameData: fightingEngine.getDefaultFrameData(),
-        position: { x: 650, y: 400 },
-        facing: "left"
-      };
-
-      setPlayerEngine(pEngine);
-      setOpponentEngine(oEngine);
       setGameState("battle");
       setComboCount(0);
       setHighestCombo(0);
-      setPlayerMeter(0);
-      setOpponentMeter(0);
       setBattleLog([`${player.name} vs ${opponent.name} - FIGHT!`]);
-      lastHitTimeRef.current = Date.now();
       
-      // Start game loop
-      startGameLoop();
+      toast({
+        title: "FIGHT!",
+        description: `${player.name} vs ${opponent.name}`,
+        duration: 2000
+      });
     }
   };
 
@@ -935,6 +912,64 @@ const ArcadeFighting = () => {
         )}
 
         {gameState === "battle" && player && opponent && selectedArena && (
+          <div className="space-y-6">
+            <div className="flex justify-center items-center gap-4 mb-6">
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-primary mb-2">{player.name}</h3>
+                <Badge variant={player.alignment === "Good" ? "default" : "destructive"}>
+                  {player.alignment}
+                </Badge>
+              </div>
+              <div className="text-4xl font-bold text-muted-foreground">VS</div>
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-destructive mb-2">{opponent.name}</h3>
+                <Badge variant={opponent.alignment === "Good" ? "default" : "destructive"}>
+                  {opponent.alignment}
+                </Badge>
+              </div>
+            </div>
+
+            <PhaserGame
+              playerConfig={{
+                name: player.name,
+                health: player.health,
+                attack: player.attack,
+                defense: player.defense,
+                speed: 5,
+                jumpPower: 12,
+                spriteKey: player.id,
+                alignment: player.alignment as 'Good' | 'Evil'
+              }}
+              opponentConfig={{
+                name: opponent.name,
+                health: opponent.health,
+                attack: opponent.attack,
+                defense: opponent.defense,
+                speed: 4,
+                jumpPower: 10,
+                spriteKey: opponent.id,
+                alignment: opponent.alignment as 'Good' | 'Evil'
+              }}
+              arenaKey={selectedArena.id}
+              onGameEnd={finishBattle}
+            />
+
+            <div className="text-center">
+              <Button variant="outline" onClick={() => {
+                setGameState("selection");
+                setPlayer(null);
+                setOpponent(null);
+                setSelectedArena(null);
+                setPlayerBooster(null);
+              }}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Menu
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Remove the old battle UI - keeping victory screen */}
+        {gameState === "victory" && false && player && opponent && selectedArena && (
           <div 
             className="max-w-5xl mx-auto space-y-6 relative p-6 rounded-lg"
             style={{
