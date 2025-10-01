@@ -22,8 +22,8 @@ const Hero = () => {
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center">
-        <div className="animate-float">
-          <Crown className="w-20 h-20 mx-auto mb-6 text-secondary animate-pulse-glow" />
+        <div className="absolute top-8 left-8 animate-float z-20">
+          <Crown className="w-20 h-20 text-secondary animate-pulse-glow" />
         </div>
         
         <h1 className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-secondary via-primary to-accent bg-clip-text text-transparent">
