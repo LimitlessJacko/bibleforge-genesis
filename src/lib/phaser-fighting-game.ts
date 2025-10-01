@@ -326,6 +326,9 @@ export class FightingGameScene extends Phaser.Scene {
   };
   private gameOver = false;
   private onGameEnd?: (playerWon: boolean) => void;
+  private playerConfig!: FighterConfig;
+  private opponentConfig!: FighterConfig;
+  private arenaKey!: string;
 
   constructor() {
     super({ key: 'FightingGameScene' });
@@ -337,7 +340,13 @@ export class FightingGameScene extends Phaser.Scene {
     arenaKey: string;
     onGameEnd?: (playerWon: boolean) => void;
   }) {
-    this.onGameEnd = data.onGameEnd;
+    if (data.playerConfig && data.opponentConfig && data.arenaKey) {
+      this.playerConfig = data.playerConfig;
+      this.opponentConfig = data.opponentConfig;
+      this.arenaKey = data.arenaKey;
+      this.onGameEnd = data.onGameEnd;
+      this.gameOver = false;
+    }
   }
 
   preload() {
@@ -345,11 +354,9 @@ export class FightingGameScene extends Phaser.Scene {
     // Character sprites will be loaded from React component
   }
 
-  create(data: {
-    playerConfig: FighterConfig;
-    opponentConfig: FighterConfig;
-    arenaKey: string;
-  }) {
+  create() {
+    // Skip if no config data
+    if (!this.playerConfig || !this.opponentConfig) return;
     // Arena background
     const bg = this.add.rectangle(
       this.scale.width / 2,
@@ -374,7 +381,7 @@ export class FightingGameScene extends Phaser.Scene {
       this,
       200,
       400,
-      data.playerConfig,
+      this.playerConfig,
       true
     );
 
@@ -382,7 +389,7 @@ export class FightingGameScene extends Phaser.Scene {
       this,
       this.scale.width - 200,
       400,
-      data.opponentConfig,
+      this.opponentConfig,
       false
     );
     this.opponent.facing = -1;
