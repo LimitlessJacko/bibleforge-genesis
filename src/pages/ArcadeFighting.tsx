@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -6,6 +6,12 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Swords, Heart, Zap, Shield, Flame, Crown, Sparkles } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { 
+  fightingEngine, 
+  type CharacterState, 
+  type InputBuffer, 
+  type Character as EngineCharacter 
+} from "@/lib/fighting-engine";
 
 // Import character images
 import mosesImg from "@/assets/characters/moses.jpg";
@@ -128,6 +134,13 @@ const ArcadeFighting = () => {
   const [unlockedCharacters, setUnlockedCharacters] = useState<string[]>([]);
   const [wins, setWins] = useState(0);
   
+  // Engine state
+  const [playerEngine, setPlayerEngine] = useState<EngineCharacter | null>(null);
+  const [opponentEngine, setOpponentEngine] = useState<EngineCharacter | null>(null);
+  const inputBufferRef = useRef<InputBuffer>(fightingEngine.createInputBuffer());
+  const lastHitTimeRef = useRef<number>(Date.now());
+  const animationFrameRef = useRef<number>();
+  
   // Load unlocked characters and wins from localStorage
   useEffect(() => {
     const savedUnlocks = localStorage.getItem('spiritualWarfare_unlocks');
@@ -209,13 +222,107 @@ const ArcadeFighting = () => {
 
   const startBattle = () => {
     if (player && opponent && selectedArena) {
+      // Initialize engine characters
+      const pEngine: EngineCharacter = {
+        ...fightingEngine.createCharacter({
+          health: player.health,
+          attack: player.attack,
+          defense: player.defense
+        }),
+        frameData: fightingEngine.getDefaultFrameData(),
+        position: { x: 150, y: 400 },
+        facing: "right"
+      };
+
+      const oEngine: EngineCharacter = {
+        ...fightingEngine.createCharacter({
+          health: opponent.health,
+          attack: opponent.attack,
+          defense: opponent.defense
+        }),
+        frameData: fightingEngine.getDefaultFrameData(),
+        position: { x: 650, y: 400 },
+        facing: "left"
+      };
+
+      setPlayerEngine(pEngine);
+      setOpponentEngine(oEngine);
       setGameState("battle");
       setComboCount(0);
       setHighestCombo(0);
       setPlayerMeter(0);
       setOpponentMeter(0);
       setBattleLog([`${player.name} vs ${opponent.name} - FIGHT!`]);
+      lastHitTimeRef.current = Date.now();
+      
+      // Start game loop
+      startGameLoop();
     }
+  };
+
+  // Main game loop using requestAnimationFrame
+  const startGameLoop = () => {
+    const gameLoop = () => {
+      if (gameState === "battle" && playerEngine && opponentEngine) {
+        updateGameState();
+      }
+      animationFrameRef.current = requestAnimationFrame(gameLoop);
+    };
+    animationFrameRef.current = requestAnimationFrame(gameLoop);
+  };
+
+  // Stop game loop
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
+
+  // Update game state each frame
+  const updateGameState = () => {
+    if (!playerEngine || !opponentEngine) return;
+
+    // Update physics and states
+    fightingEngine.updatePhysics(playerEngine);
+    fightingEngine.updatePhysics(opponentEngine);
+    fightingEngine.updateState(playerEngine);
+    fightingEngine.updateState(opponentEngine);
+
+    // Update facing direction
+    if (playerEngine.position.x < opponentEngine.position.x) {
+      playerEngine.facing = "right";
+      opponentEngine.facing = "left";
+    } else {
+      playerEngine.facing = "left";
+      opponentEngine.facing = "right";
+    }
+
+    // Combo reset check
+    fightingEngine.checkComboReset(
+      playerEngine, 
+      Date.now() - lastHitTimeRef.current
+    );
+
+    // Sync with React state
+    setPlayerHP(Math.max(0, playerEngine.health));
+    setOpponentHP(Math.max(0, opponentEngine.health));
+    setPlayerMeter(playerEngine.meter);
+    setOpponentMeter(opponentEngine.meter);
+    setComboCount(playerEngine.comboCount);
+
+    // Check win conditions
+    if (playerEngine.health <= 0 || opponentEngine.health <= 0) {
+      finishBattle(playerEngine.health > 0);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    }
+
+    // Update engines in state
+    setPlayerEngine({...playerEngine});
+    setOpponentEngine({...opponentEngine});
   };
 
   const resetCombo = () => {
@@ -241,74 +348,100 @@ const ArcadeFighting = () => {
   };
 
   const lightAttack = useCallback(() => {
-    if (!player || !opponent || gameState !== "battle") return;
+    if (!playerEngine || !opponentEngine || gameState !== "battle") return;
+    if (playerEngine.state !== "idle" && playerEngine.state !== "walking") return;
 
-    const attackMultiplier = playerBooster?.effect === "attack" ? playerBooster.multiplier : 1;
-    const baseDamage = Math.floor((player.attack / opponent.defense) * (Math.random() * 8 + 5) * attackMultiplier);
-    const comboMultiplier = 1 + (comboCount * 0.15);
-    const damage = Math.floor(baseDamage * comboMultiplier);
-    
-    const newOpponentHP = Math.max(0, opponentHP - damage);
-    setOpponentHP(newOpponentHP);
-    addComboHit();
-    
-    const comboText = comboCount > 0 ? ` (${comboCount + 1} HIT COMBO!)` : "";
-    setBattleLog(prev => [...prev, `${player.name} light attack! ${damage} damage${comboText}`]);
+    // Add input to buffer
+    fightingEngine.addInput(inputBufferRef.current, "light");
 
-    if (newOpponentHP <= 0) {
-      finishBattle(true);
+    // Check for special move
+    if (fightingEngine.checkSpecialMove(inputBufferRef.current)) {
+      specialMove();
       return;
     }
 
-    if (comboCount === 0) {
-      setTimeout(() => opponentCounterAttack(), 1000);
-    }
-  }, [player, opponent, gameState, comboCount, opponentHP, playerBooster]);
+    playerEngine.state = "light_attack";
+    playerEngine.currentFrame = 0;
+
+    // Process hit
+    setTimeout(() => {
+      if (!playerEngine || !opponentEngine) return;
+      
+      const hitResult = fightingEngine.processHit(
+        playerEngine,
+        opponentEngine,
+        opponentEngine.state === "blocking"
+      );
+
+      if (hitResult) {
+        lastHitTimeRef.current = Date.now();
+        const comboText = hitResult.comboCount > 1 ? ` (${hitResult.comboCount} HIT COMBO!)` : "";
+        setBattleLog(prev => [...prev.slice(-5), 
+          `${player?.name} light attack! ${Math.floor(hitResult.damage)} damage${comboText}`
+        ]);
+      }
+    }, 100);
+  }, [playerEngine, opponentEngine, gameState, player]);
 
   const heavyAttack = useCallback(() => {
-    if (!player || !opponent || gameState !== "battle") return;
+    if (!playerEngine || !opponentEngine || gameState !== "battle") return;
+    if (playerEngine.state !== "idle" && playerEngine.state !== "walking") return;
 
-    const attackMultiplier = playerBooster?.effect === "attack" ? playerBooster.multiplier : 1;
-    const baseDamage = Math.floor((player.attack / opponent.defense) * (Math.random() * 15 + 20) * attackMultiplier);
-    const comboMultiplier = 1 + (comboCount * 0.2);
-    const damage = Math.floor(baseDamage * comboMultiplier);
-    
-    const newOpponentHP = Math.max(0, opponentHP - damage);
-    setOpponentHP(newOpponentHP);
-    const meterGain = playerBooster?.effect === "speed" ? 16 : 12;
-    setPlayerMeter(prev => Math.min(100, prev + meterGain));
-    
-    resetCombo();
-    setBattleLog(prev => [...prev, `${player.name} HEAVY STRIKE! ${damage} damage!`]);
+    fightingEngine.addInput(inputBufferRef.current, "heavy");
 
-    if (newOpponentHP <= 0) {
-      finishBattle(true);
-      return;
-    }
+    playerEngine.state = "heavy_attack";
+    playerEngine.currentFrame = 0;
 
-    setTimeout(() => opponentCounterAttack(), 1200);
-  }, [player, opponent, gameState, comboCount, opponentHP, playerBooster]);
+    setTimeout(() => {
+      if (!playerEngine || !opponentEngine) return;
+      
+      const hitResult = fightingEngine.processHit(
+        playerEngine,
+        opponentEngine,
+        opponentEngine.state === "blocking"
+      );
+
+      if (hitResult) {
+        lastHitTimeRef.current = Date.now();
+        setBattleLog(prev => [...prev.slice(-5), 
+          `${player?.name} HEAVY STRIKE! ${Math.floor(hitResult.damage)} damage!`
+        ]);
+      }
+
+      // AI counter
+      setTimeout(() => opponentAIAction(), 800);
+    }, 200);
+  }, [playerEngine, opponentEngine, gameState, player]);
 
   const launcherAttack = useCallback(() => {
-    if (!player || !opponent || gameState !== "battle") return;
+    if (!playerEngine || !opponentEngine || gameState !== "battle") return;
+    if (playerEngine.state !== "idle" && playerEngine.state !== "walking") return;
 
-    const attackMultiplier = playerBooster?.effect === "attack" ? playerBooster.multiplier : 1;
-    const damage = Math.floor((player.attack / opponent.defense) * (Math.random() * 12 + 15) * attackMultiplier);
-    const newOpponentHP = Math.max(0, opponentHP - damage);
-    setOpponentHP(newOpponentHP);
-    const meterGain = playerBooster?.effect === "speed" ? 14 : 10;
-    setPlayerMeter(prev => Math.min(100, prev + meterGain));
-    
-    setBattleLog(prev => [...prev, `${player.name} LAUNCHER! ${damage} damage! Air combo ready!`]);
-    
-    // Enables additional air combo hits
-    addComboHit();
-    addComboHit();
+    playerEngine.state = "launcher";
+    playerEngine.currentFrame = 0;
 
-    if (newOpponentHP <= 0) {
-      finishBattle(true);
-    }
-  }, [player, opponent, gameState, opponentHP, playerBooster]);
+    setTimeout(() => {
+      if (!playerEngine || !opponentEngine) return;
+      
+      const hitResult = fightingEngine.processHit(
+        playerEngine,
+        opponentEngine,
+        opponentEngine.state === "blocking"
+      );
+
+      if (hitResult) {
+        lastHitTimeRef.current = Date.now();
+        setBattleLog(prev => [...prev.slice(-5), 
+          `${player?.name} LAUNCHER! ${Math.floor(hitResult.damage)} damage! Air combo ready!`
+        ]);
+        toast({
+          title: "LAUNCHER!",
+          description: "Follow up with more attacks!",
+          duration: 1500
+        });
+      }
+    }, 250);
+  }, [playerEngine, opponentEngine, gameState, player]);
 
   const comboBreaker = useCallback(() => {
     if (!canComboBreak || playerMeter < 20) return;
@@ -319,40 +452,121 @@ const ArcadeFighting = () => {
     toast({ title: "C-C-C-COMBO BREAKER!", description: "Combo interrupted!" });
   }, [canComboBreak, playerMeter, player]);
 
-  const hyperCombo = useCallback(() => {
-    if (!player || !opponent || gameState !== "battle" || playerMeter < 100) return;
+  const specialMove = useCallback(() => {
+    if (!playerEngine || !opponentEngine || gameState !== "battle") return;
+    if (playerEngine.meter < 30) {
+      toast({ title: "Not enough meter!", variant: "destructive", duration: 1000 });
+      return;
+    }
 
-    const attackMultiplier = playerBooster?.effect === "attack" ? playerBooster.multiplier : 1;
-    const damage = Math.floor((player.attack + player.spirit) * (Math.random() * 0.8 + 1.2) * attackMultiplier);
-    const newOpponentHP = Math.max(0, opponentHP - damage);
-    setOpponentHP(newOpponentHP);
-    setPlayerMeter(0);
-    resetCombo();
-    
-    setBattleLog(prev => [...prev, `${player.name} HYPER COMBO!!! MASSIVE ${damage} DAMAGE!`]);
-    toast({ 
-      title: "🔥 HYPER COMBO! 🔥", 
-      description: `${player.name} unleashes ultimate power!`,
-      className: "text-xl font-bold"
+    playerEngine.state = "special_move";
+    playerEngine.currentFrame = 0;
+    playerEngine.meter -= 30;
+
+    setTimeout(() => {
+      if (!playerEngine || !opponentEngine) return;
+      
+      const hitResult = fightingEngine.processHit(
+        playerEngine,
+        opponentEngine,
+        opponentEngine.state === "blocking"
+      );
+
+      if (hitResult) {
+        lastHitTimeRef.current = Date.now();
+        setBattleLog(prev => [...prev.slice(-5), 
+          `${player?.name} SPECIAL MOVE! ${Math.floor(hitResult.damage)} damage!`
+        ]);
+        toast({
+          title: "⚡ SPECIAL MOVE!",
+          description: `Powerful attack!`,
+          duration: 1500
+        });
+      }
+    }, 300);
+  }, [playerEngine, opponentEngine, gameState, player]);
+
+  const hyperCombo = useCallback(() => {
+    if (!playerEngine || !opponentEngine || gameState !== "battle") return;
+    if (playerEngine.meter < 100) {
+      toast({ title: "Need full meter!", variant: "destructive", duration: 1000 });
+      return;
+    }
+
+    playerEngine.state = "special_move";
+    playerEngine.currentFrame = 0;
+    playerEngine.meter = 0;
+
+    // Multiple hits
+    const hyperHits = [0, 150, 300, 450];
+    hyperHits.forEach((delay) => {
+      setTimeout(() => {
+        if (!playerEngine || !opponentEngine) return;
+        
+        const hitResult = fightingEngine.processHit(
+          playerEngine,
+          opponentEngine,
+          false // Hyper combos are unblockable
+        );
+
+        if (hitResult) {
+          lastHitTimeRef.current = Date.now();
+        }
+      }, delay);
     });
 
-    if (newOpponentHP <= 0) {
-      finishBattle(true);
-    }
-  }, [player, opponent, gameState, playerMeter, opponentHP, playerBooster]);
+    setBattleLog(prev => [...prev.slice(-5), 
+      `${player?.name} HYPER COMBO!!! ULTIMATE ATTACK!`
+    ]);
+    
+    toast({ 
+      title: "🔥 HYPER COMBO! 🔥", 
+      description: `${player?.name} unleashes ultimate power!`,
+      className: "text-xl font-bold"
+    });
+  }, [playerEngine, opponentEngine, gameState, player]);
 
-  const opponentCounterAttack = () => {
-    if (!opponent || !player || gameState !== "battle") return;
+  const opponentAIAction = () => {
+    if (!opponentEngine || !playerEngine || gameState !== "battle") return;
+    if (opponentEngine.state !== "idle") return;
 
-    const defenseMultiplier = playerBooster?.effect === "defense" ? playerBooster.multiplier : 1;
-    const counterDamage = Math.floor((opponent.attack / (player.defense * defenseMultiplier)) * (Math.random() * 15 + 10));
-    const newPlayerHP = Math.max(0, playerHP - counterDamage);
-    setPlayerHP(newPlayerHP);
-    setOpponentMeter(prev => Math.min(100, prev + 10));
-    setBattleLog(prev => [...prev, `${opponent.name} counter! ${counterDamage} damage!`]);
+    // Simple AI logic
+    const distance = Math.abs(playerEngine.position.x - opponentEngine.position.x);
+    const random = Math.random();
 
-    if (newPlayerHP <= 0) {
-      finishBattle(false);
+    if (distance < 80) {
+      // Close range - attack
+      if (random > 0.7) {
+        opponentEngine.state = "heavy_attack";
+      } else {
+        opponentEngine.state = "light_attack";
+      }
+      opponentEngine.currentFrame = 0;
+
+      setTimeout(() => {
+        if (!playerEngine || !opponentEngine) return;
+        
+        const hitResult = fightingEngine.processHit(
+          opponentEngine,
+          playerEngine,
+          playerEngine.state === "blocking"
+        );
+
+        if (hitResult) {
+          setBattleLog(prev => [...prev.slice(-5), 
+            `${opponent?.name} attacks! ${Math.floor(hitResult.damage)} damage!`
+          ]);
+        }
+      }, 150);
+    } else if (distance < 150 && random > 0.8) {
+      // Mid range - special or launcher
+      if (opponentEngine.meter > 40) {
+        opponentEngine.state = "special_move";
+        opponentEngine.meter -= 30;
+      } else {
+        opponentEngine.state = "launcher";
+      }
+      opponentEngine.currentFrame = 0;
     }
   };
 
