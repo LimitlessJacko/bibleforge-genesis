@@ -102,11 +102,13 @@ const ArcadeFightingPreview = () => {
               </div>
             </div>
             <div className="rounded-lg overflow-hidden border-4 border-primary/30 shadow-2xl hover-scale">
-              <img 
-                src={mosesVsPharaoh} 
-                alt="Moses vs Pharaoh gameplay with special moves at Red Sea"
-                className="w-full h-auto"
-              />
+              <div className="h-64 bg-gradient-to-b from-background/50 to-background flex items-center justify-center">
+                <img 
+                  src={mosesVsPharaoh} 
+                  alt="Moses vs Pharaoh gameplay with special moves at Red Sea"
+                  className="w-full h-full object-contain"
+                />
+              </div>
               <div className="p-3 bg-card">
                 <p className="text-sm font-semibold">Moses vs Pharaoh</p>
                 <p className="text-xs text-muted-foreground">Special moves at the Red Sea arena</p>
