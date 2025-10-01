@@ -14,7 +14,7 @@ const Hero = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Logo - Top Left */}
-      <div className="absolute top-8 left-8 z-20 animate-float">
+      <div className="absolute top-2 left-2 z-20 animate-float">
         <img src={logo} alt="Spiritual Warfare Logo" className="w-32 h-32 object-contain" />
       </div>
 
