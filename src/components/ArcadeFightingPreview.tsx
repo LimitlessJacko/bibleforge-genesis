@@ -90,33 +90,33 @@ const ArcadeFightingPreview = () => {
         <div className="mt-12 space-y-4">
           <h3 className="text-2xl font-bold text-center mb-6">Gameplay Screenshots</h3>
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="rounded-lg overflow-hidden border-4 border-primary/30 shadow-2xl hover-scale">
+            <div className="rounded-lg overflow-hidden border-4 border-primary/30 shadow-2xl hover-scale bg-gradient-to-b from-background/50 to-background/20">
               <img 
                 src={davidVsGoliath} 
                 alt="David vs Goliath gameplay screenshot showing epic battle"
-                className="w-full h-auto"
+                className="w-full h-64 object-contain"
               />
               <div className="p-3 bg-card">
                 <p className="text-sm font-semibold">David vs Goliath</p>
                 <p className="text-xs text-muted-foreground">Classic matchup in ancient arena</p>
               </div>
             </div>
-            <div className="rounded-lg overflow-hidden border-4 border-primary/30 shadow-2xl hover-scale">
+            <div className="rounded-lg overflow-hidden border-4 border-primary/30 shadow-2xl hover-scale bg-gradient-to-b from-background/50 to-background/20">
               <img 
                 src={mosesVsPharaoh} 
                 alt="Moses vs Pharaoh gameplay with special moves at Red Sea"
-                className="w-full h-auto"
+                className="w-full h-64 object-contain"
               />
               <div className="p-3 bg-card">
                 <p className="text-sm font-semibold">Moses vs Pharaoh</p>
                 <p className="text-xs text-muted-foreground">Special moves at the Red Sea arena</p>
               </div>
             </div>
-            <div className="rounded-lg overflow-hidden border-4 border-primary/30 shadow-2xl hover-scale">
+            <div className="rounded-lg overflow-hidden border-4 border-primary/30 shadow-2xl hover-scale bg-gradient-to-b from-background/50 to-background/20">
               <img 
                 src={elijahVsJezebel} 
                 alt="Elijah vs Jezebel with fire and dark magic combat"
-                className="w-full h-auto"
+                className="w-full h-64 object-contain"
               />
               <div className="p-3 bg-card">
                 <p className="text-sm font-semibold">Elijah vs Jezebel</p>
@@ -127,7 +127,7 @@ const ArcadeFightingPreview = () => {
               <img 
                 src={michaelVsLucifer} 
                 alt="Michael vs Lucifer ultimate special move battle"
-                className="w-full h-auto"
+                className="w-full h-64 object-cover"
               />
               <div className="p-3 bg-card">
                 <p className="text-sm font-semibold">Michael vs Lucifer</p>
