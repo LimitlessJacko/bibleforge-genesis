@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Home, Dices, Trophy, Users } from "lucide-react";
+import { Home, Dices, Trophy, Users, Swords, Shield, Zap, Crown } from "lucide-react";
 
-type PlayerColor = "red" | "blue" | "green" | "yellow";
+type PlayerColor = "righteous" | "faithful" | "redeemed" | "sanctified";
 type PiecePosition = number; // -1 = home, 0-51 = board path, 52-57 = final stretch
 
 interface Piece {
@@ -23,18 +23,48 @@ interface Player {
   name: string;
 }
 
-const COLORS = {
-  red: { bg: "bg-red-500", border: "border-red-600", text: "text-red-500" },
-  blue: { bg: "bg-blue-500", border: "border-blue-600", text: "text-blue-500" },
-  green: { bg: "bg-green-500", border: "border-green-600", text: "text-green-500" },
-  yellow: { bg: "bg-yellow-500", border: "border-yellow-600", text: "text-yellow-500" },
+const SPIRITUAL_THEMES = {
+  righteous: { 
+    name: "Righteous Warriors",
+    icon: Swords,
+    bg: "bg-gradient-to-br from-red-600 to-red-800", 
+    border: "border-red-400", 
+    text: "text-red-400",
+    glow: "shadow-[0_0_20px_rgba(239,68,68,0.5)]"
+  },
+  faithful: { 
+    name: "Faithful Servants",
+    icon: Shield,
+    bg: "bg-gradient-to-br from-blue-600 to-blue-800", 
+    border: "border-blue-400", 
+    text: "text-blue-400",
+    glow: "shadow-[0_0_20px_rgba(59,130,246,0.5)]"
+  },
+  redeemed: { 
+    name: "Redeemed Souls",
+    icon: Zap,
+    bg: "bg-gradient-to-br from-green-600 to-green-800", 
+    border: "border-green-400", 
+    text: "text-green-400",
+    glow: "shadow-[0_0_20px_rgba(34,197,94,0.5)]"
+  },
+  sanctified: { 
+    name: "Sanctified Saints",
+    icon: Crown,
+    bg: "bg-gradient-to-br from-yellow-600 to-yellow-800", 
+    border: "border-yellow-400", 
+    text: "text-yellow-400",
+    glow: "shadow-[0_0_20px_rgba(234,179,8,0.5)]"
+  },
 };
 
-const PLAYER_STARTS = { red: 0, green: 13, yellow: 26, blue: 39 };
-const SAFE_SPOTS = [0, 8, 13, 21, 26, 34, 39, 47];
+const PLAYER_STARTS = { righteous: 0, redeemed: 13, sanctified: 26, faithful: 39 };
+const SAFE_SPOTS = [0, 8, 13, 21, 26, 34, 39, 47]; // Holy Ground
 
 export default function Ludi() {
   const navigate = useNavigate();
+  const [gameStarted, setGameStarted] = useState(false);
+  const [numHumanPlayers, setNumHumanPlayers] = useState(1);
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [diceValue, setDiceValue] = useState<number | null>(null);
@@ -46,7 +76,6 @@ export default function Ludi() {
   const [consecutiveSixes, setConsecutiveSixes] = useState(0);
 
   useEffect(() => {
-    initializeGame();
     checkUnlockStatus();
   }, []);
 
@@ -70,14 +99,21 @@ export default function Ludi() {
     }
   };
 
-  const initializeGame = () => {
-    const initialPlayers: Player[] = [
-      { color: "red", pieces: createPieces(), isAI: false, name: "You" },
-      { color: "blue", pieces: createPieces(), isAI: true, name: "AI Blue" },
-      { color: "green", pieces: createPieces(), isAI: true, name: "AI Green" },
-      { color: "yellow", pieces: createPieces(), isAI: true, name: "AI Yellow" },
-    ];
+  const initializeGame = (humanCount: number) => {
+    const colors: PlayerColor[] = ["righteous", "faithful", "redeemed", "sanctified"];
+    const initialPlayers: Player[] = colors.map((color, index) => ({
+      color,
+      pieces: createPieces(),
+      isAI: index >= humanCount,
+      name: index >= humanCount ? `AI ${SPIRITUAL_THEMES[color].name}` : `Player ${index + 1}`,
+    }));
     setPlayers(initialPlayers);
+    setGameStarted(true);
+  };
+
+  const startGame = (humanCount: number) => {
+    setNumHumanPlayers(humanCount);
+    initializeGame(humanCount);
   };
 
   const createPieces = (): Piece[] => {
@@ -256,24 +292,25 @@ export default function Ludi() {
 
   const renderBoard = () => {
     return (
-      <div className="relative w-full max-w-2xl aspect-square bg-gradient-to-br from-amber-100 to-amber-200 border-4 border-amber-800 rounded-lg shadow-2xl">
-        {/* Home areas in corners */}
-        <div className="absolute top-0 left-0 w-[40%] h-[40%] bg-red-200 border-4 border-red-600 rounded-tl-lg">
-          {renderHomeArea("red")}
+      <div className="relative w-full max-w-2xl aspect-square bg-gradient-to-br from-background via-card to-background border-4 border-primary rounded-lg shadow-2xl glow-divine">
+        {/* Home areas in corners - Spiritual Camps */}
+        <div className={`absolute top-0 left-0 w-[40%] h-[40%] ${SPIRITUAL_THEMES.righteous.bg} border-4 ${SPIRITUAL_THEMES.righteous.border} rounded-tl-lg ${SPIRITUAL_THEMES.righteous.glow}`}>
+          {renderHomeArea("righteous")}
         </div>
-        <div className="absolute top-0 right-0 w-[40%] h-[40%] bg-blue-200 border-4 border-blue-600 rounded-tr-lg">
-          {renderHomeArea("blue")}
+        <div className={`absolute top-0 right-0 w-[40%] h-[40%] ${SPIRITUAL_THEMES.faithful.bg} border-4 ${SPIRITUAL_THEMES.faithful.border} rounded-tr-lg ${SPIRITUAL_THEMES.faithful.glow}`}>
+          {renderHomeArea("faithful")}
         </div>
-        <div className="absolute bottom-0 left-0 w-[40%] h-[40%] bg-green-200 border-4 border-green-600 rounded-bl-lg">
-          {renderHomeArea("green")}
+        <div className={`absolute bottom-0 left-0 w-[40%] h-[40%] ${SPIRITUAL_THEMES.redeemed.bg} border-4 ${SPIRITUAL_THEMES.redeemed.border} rounded-bl-lg ${SPIRITUAL_THEMES.redeemed.glow}`}>
+          {renderHomeArea("redeemed")}
         </div>
-        <div className="absolute bottom-0 right-0 w-[40%] h-[40%] bg-yellow-200 border-4 border-yellow-600 rounded-br-lg">
-          {renderHomeArea("yellow")}
+        <div className={`absolute bottom-0 right-0 w-[40%] h-[40%] ${SPIRITUAL_THEMES.sanctified.bg} border-4 ${SPIRITUAL_THEMES.sanctified.border} rounded-br-lg ${SPIRITUAL_THEMES.sanctified.glow}`}>
+          {renderHomeArea("sanctified")}
         </div>
         
-        {/* Center home */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-gradient-to-br from-purple-400 to-pink-400 border-4 border-purple-600 rounded-full flex items-center justify-center">
-          <Trophy className="w-12 h-12 text-white" />
+        {/* Center - Throne of Glory */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-gradient-to-br from-primary via-secondary to-accent border-4 border-secondary rounded-full flex items-center justify-center animate-pulse-glow">
+          <Trophy className="w-12 h-12 text-primary-foreground" />
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-transparent to-primary/20 animate-spin" style={{ animationDuration: '3s' }} />
         </div>
       </div>
     );
@@ -282,6 +319,8 @@ export default function Ludi() {
   const renderHomeArea = (color: PlayerColor) => {
     const player = players.find(p => p.color === color);
     if (!player) return null;
+    
+    const Icon = SPIRITUAL_THEMES[color].icon;
     
     return (
       <div className="grid grid-cols-2 gap-2 p-4 h-full">
@@ -292,41 +331,134 @@ export default function Ludi() {
               onClick={() => movePiece(piece.id)}
               disabled={!canMove || diceValue !== 6}
               className={`
-                ${COLORS[color].bg} 
+                bg-background/90
                 rounded-full 
-                border-4 ${COLORS[color].border}
+                border-4 ${SPIRITUAL_THEMES[color].border}
                 aspect-square
                 transition-all
-                ${canMove && diceValue === 6 ? 'hover:scale-110 cursor-pointer animate-pulse' : 'opacity-70'}
+                flex items-center justify-center
+                ${canMove && diceValue === 6 ? 'hover:scale-110 cursor-pointer animate-pulse ' + SPIRITUAL_THEMES[color].glow : 'opacity-70'}
               `}
-            />
+            >
+              <Icon className={`w-6 h-6 ${SPIRITUAL_THEMES[color].text}`} />
+            </button>
           )
         ))}
       </div>
     );
   };
 
+  // Setup Screen
+  if (!gameStarted) {
+    return (
+      <div className="min-h-screen bg-background p-8">
+        <div className="container mx-auto max-w-4xl">
+          <div className="flex justify-between items-center mb-8">
+            <Button onClick={() => navigate("/")} variant="outline" size="lg">
+              <Home className="mr-2" /> Back to Home
+            </Button>
+            <h1 className="text-5xl font-bold text-secondary text-glow">
+              ⚔️ Spiritual Ludi Battle 🛡️
+            </h1>
+            <div className="w-32" />
+          </div>
+
+          <Card className="p-8 bg-card border-primary glow-divine">
+            <h2 className="text-3xl font-bold text-center mb-6 text-primary">
+              Choose Your Warriors
+            </h2>
+            <p className="text-center text-muted-foreground mb-8">
+              Select how many human players will join the spiritual battle
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {[1, 2, 3, 4].map((count) => (
+                <Card
+                  key={count}
+                  className={`p-6 cursor-pointer transition-all hover:scale-105 border-2 ${
+                    numHumanPlayers === count ? 'border-primary glow-divine' : 'border-border'
+                  }`}
+                  onClick={() => setNumHumanPlayers(count)}
+                >
+                  <div className="text-center">
+                    <Users className="w-12 h-12 mx-auto mb-3 text-primary" />
+                    <h3 className="text-2xl font-bold mb-2">{count} Player{count > 1 ? 's' : ''}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {4 - count} AI Opponent{4 - count !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            <div className="space-y-4 mb-8">
+              <h3 className="text-xl font-bold text-primary">Spiritual Forces:</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {(Object.keys(SPIRITUAL_THEMES) as PlayerColor[]).map((color) => {
+                  const theme = SPIRITUAL_THEMES[color];
+                  const Icon = theme.icon;
+                  return (
+                    <div key={color} className={`p-4 rounded-lg ${theme.bg} ${theme.glow} border-2 ${theme.border}`}>
+                      <div className="flex items-center gap-3">
+                        <Icon className="w-8 h-8 text-white" />
+                        <span className="text-lg font-bold text-white">{theme.name}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Button
+              onClick={() => startGame(numHumanPlayers)}
+              size="lg"
+              className="w-full text-xl py-6 bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+            >
+              <Swords className="mr-2" />
+              Begin Spiritual Battle
+              <Shield className="ml-2" />
+            </Button>
+          </Card>
+
+          <Card className="mt-6 p-6 bg-card/50 border-accent">
+            <h4 className="font-bold mb-3 text-accent">Divine Rules:</h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>• Roll 6 to deploy your spiritual warriors</li>
+              <li>• Land on enemies to send them back to camp</li>
+              <li>• Holy Ground (safe spots) protects your warriors</li>
+              <li>• Guide all 4 warriors to the Throne to win</li>
+              <li>• Roll 6 to receive another divine turn</li>
+              <li>• Three 6's in a row = turn skipped by divine intervention!</li>
+            </ul>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   if (!players.length) return null;
 
   const currentPlayer = players[currentPlayerIndex];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-400 to-pink-500 p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="container mx-auto max-w-6xl">
         <div className="flex justify-between items-center mb-8">
           <Button onClick={() => navigate("/")} variant="outline" size="lg">
             <Home className="mr-2" /> Back to Home
           </Button>
-          <h1 className="text-5xl font-bold text-white drop-shadow-lg">
-            🎲 Jamaican Ludi 🇯🇲
+          <h1 className="text-5xl font-bold text-secondary text-glow">
+            ⚔️ Spiritual Ludi Battle 🛡️
           </h1>
           <div className="w-32" />
         </div>
 
         {winner && (
-          <Card className="mb-6 p-6 bg-gradient-to-r from-yellow-400 to-orange-400 border-4 border-yellow-600 animate-bounce">
-            <h2 className="text-3xl font-bold text-center text-white">
-              🎉 {players.find(p => p.color === winner)?.name} Wins! 🎉
+          <Card className="mb-6 p-6 bg-gradient-to-r from-primary to-secondary border-4 border-secondary animate-bounce glow-divine">
+            <h2 className="text-3xl font-bold text-center text-primary-foreground flex items-center justify-center gap-3">
+              <Trophy className="w-10 h-10" />
+              {players.find(p => p.color === winner)?.name} Achieves Victory!
+              <Trophy className="w-10 h-10" />
             </h2>
           </Card>
         )}
@@ -339,9 +471,12 @@ export default function Ludi() {
 
           {/* Control Panel */}
           <div className="space-y-6">
-            <Card className={`p-6 border-4 ${COLORS[currentPlayer.color].border}`}>
+            <Card className={`p-6 border-4 ${SPIRITUAL_THEMES[currentPlayer.color].border} ${SPIRITUAL_THEMES[currentPlayer.color].glow}`}>
               <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                <Users className={COLORS[currentPlayer.color].text} />
+                {(() => {
+                  const Icon = SPIRITUAL_THEMES[currentPlayer.color].icon;
+                  return <Icon className={SPIRITUAL_THEMES[currentPlayer.color].text} />;
+                })()}
                 Current Turn: {currentPlayer.name}
               </h3>
               
@@ -365,51 +500,59 @@ export default function Ludi() {
                 </div>
 
                 {diceValue && (
-                  <div className="text-center p-4 bg-white rounded-lg border-4 border-primary">
-                    <div className="text-6xl font-bold animate-bounce">
+                  <div className="text-center p-4 bg-card rounded-lg border-4 border-primary glow-divine">
+                    <div className="text-6xl font-bold animate-bounce text-secondary">
                       {diceValue}
                     </div>
+                    {diceValue === 6 && (
+                      <p className="text-sm text-primary mt-2 font-bold">Divine Favor!</p>
+                    )}
                   </div>
                 )}
               </div>
             </Card>
 
             {/* Players Status */}
-            <Card className="p-6">
-              <h3 className="text-xl font-bold mb-4">Player Status</h3>
+            <Card className="p-6 bg-card border-border">
+              <h3 className="text-xl font-bold mb-4 text-primary">Warrior Status</h3>
               <div className="space-y-3">
-                {players.map((player, index) => (
-                  <div
-                    key={player.color}
-                    className={`
-                      p-3 rounded-lg border-2 
-                      ${index === currentPlayerIndex ? 'ring-4 ring-primary' : ''}
-                      ${COLORS[player.color].border}
-                    `}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-6 h-6 rounded-full ${COLORS[player.color].bg}`} />
-                        <span className="font-bold">{player.name}</span>
-                      </div>
-                      <div className="text-sm">
-                        Finished: {player.pieces.filter(p => p.isFinished).length}/4
+                {players.map((player, index) => {
+                  const Icon = SPIRITUAL_THEMES[player.color].icon;
+                  return (
+                    <div
+                      key={player.color}
+                      className={`
+                        p-3 rounded-lg border-2 transition-all
+                        ${index === currentPlayerIndex ? 'ring-4 ring-primary ' + SPIRITUAL_THEMES[player.color].glow : ''}
+                        ${SPIRITUAL_THEMES[player.color].border}
+                      `}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-8 h-8 rounded-full ${SPIRITUAL_THEMES[player.color].bg} flex items-center justify-center`}>
+                            <Icon className="w-5 h-5 text-white" />
+                          </div>
+                          <span className="font-bold">{player.name}</span>
+                        </div>
+                        <div className="text-sm font-bold text-primary">
+                          {player.pieces.filter(p => p.isFinished).length}/4
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </Card>
 
-            <Card className="p-4 bg-gradient-to-br from-purple-100 to-pink-100">
-              <h4 className="font-bold mb-2">Game Rules:</h4>
-              <ul className="text-sm space-y-1">
-                <li>• Roll 6 to enter pieces</li>
-                <li>• Land on opponents to send them home</li>
-                <li>• Safe spots protect your pieces</li>
-                <li>• Get all 4 pieces home to win</li>
-                <li>• Roll 6 for another turn</li>
-                <li>• Three 6's = skip turn!</li>
+            <Card className="p-4 bg-card/50 border-accent">
+              <h4 className="font-bold mb-2 text-accent">Divine Rules:</h4>
+              <ul className="text-sm space-y-1 text-muted-foreground">
+                <li>• Roll 6 to deploy warriors</li>
+                <li>• Capture enemies on contact</li>
+                <li>• Holy Ground = safe zones</li>
+                <li>• All 4 warriors home = victory</li>
+                <li>• Roll 6 = extra turn</li>
+                <li>• Three 6's = divine skip!</li>
               </ul>
             </Card>
           </div>
