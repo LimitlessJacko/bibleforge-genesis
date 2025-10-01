@@ -10,6 +10,7 @@ import ArcadeFightingPreview from "@/components/ArcadeFightingPreview";
 import LimitlessBoots from "@/components/LimitlessBoots";
 import Tokenomics from "@/components/Tokenomics";
 import Footer from "@/components/Footer";
+import { AnimationsShowcase } from "@/components/AnimationsShowcase";
 import { LogOut, Trophy, User as UserIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
@@ -89,6 +90,7 @@ const Index = () => {
 
       <Hero />
       <Characters />
+      <AnimationsShowcase />
       <GameModes />
       <ArcadeFightingPreview />
       <LimitlessBoots />
