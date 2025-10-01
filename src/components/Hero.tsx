@@ -20,12 +20,13 @@ const Hero = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background"></div>
       </div>
 
+      {/* Crown in top left */}
+      <div className="absolute top-8 left-8 z-10 animate-float">
+        <Crown className="w-16 h-16 text-secondary animate-pulse-glow" />
+      </div>
+
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center">
-        <div className="animate-float">
-          <Crown className="w-20 h-20 mx-auto mb-6 text-secondary animate-pulse-glow" />
-        </div>
-        
         <h1 className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-secondary via-primary to-accent bg-clip-text text-transparent">
           Spiritual Warfare
         </h1>
