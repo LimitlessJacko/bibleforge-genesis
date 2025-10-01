@@ -509,7 +509,7 @@ const Characters = () => {
                   <img 
                     src={selectedCharacter.image} 
                     alt={selectedCharacter.name}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-card via-card/70 to-transparent"></div>
                   <div className="absolute bottom-4 left-6 flex gap-2 flex-wrap">
