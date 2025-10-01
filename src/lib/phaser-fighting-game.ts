@@ -13,6 +13,16 @@ export interface FighterConfig {
   alignment: 'Good' | 'Evil';
 }
 
+// Animation state machine types
+type AnimState = 'idle' | 'walk' | 'jump' | 'land' | 'light_attack' | 'heavy_attack' | 'special' | 'block' | 'hit' | 'crouch';
+
+interface AnimationFrame {
+  duration: number;
+  hitboxActive?: boolean;
+  moveSpeed?: number;
+  invincible?: boolean;
+}
+
 export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
   public fighterName: string;
   public engineChar: EngineCharacter;
@@ -27,6 +37,35 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
   public hitboxActive = false;
   public inputBuffer: string[] = [];
   private lastInputTime = 0;
+  
+  // Sakuga-style animation state machine
+  public animState: AnimState = 'idle';
+  public animFrame = 0;
+  public animFrameTimer = 0;
+  private animationFrames: Record<AnimState, AnimationFrame[]> = {
+    idle: [{ duration: 100 }],
+    walk: [{ duration: 100 }],
+    jump: [{ duration: 150 }],
+    land: [{ duration: 100 }],
+    light_attack: [
+      { duration: 50 }, // startup
+      { duration: 100, hitboxActive: true, moveSpeed: 150 }, // active
+      { duration: 150 } // recovery
+    ],
+    heavy_attack: [
+      { duration: 100 }, // startup
+      { duration: 150, hitboxActive: true, moveSpeed: 250 }, // active
+      { duration: 250 } // recovery
+    ],
+    special: [
+      { duration: 100 },
+      { duration: 200, hitboxActive: true, invincible: true },
+      { duration: 300 }
+    ],
+    block: [{ duration: 50 }],
+    hit: [{ duration: 100 }, { duration: 200 }],
+    crouch: [{ duration: 100 }]
+  };
 
   constructor(
     scene: Phaser.Scene,
@@ -123,54 +162,79 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     this.lastInputTime = now;
   }
 
+  changeState(newState: AnimState) {
+    if (this.animState === newState) return;
+    this.animState = newState;
+    this.animFrame = 0;
+    this.animFrameTimer = 0;
+  }
+
+  updateAnimation(delta: number) {
+    const currentAnim = this.animationFrames[this.animState];
+    if (!currentAnim || this.animFrame >= currentAnim.length) {
+      // Animation finished, return to idle
+      if (this.animState !== 'idle' && this.animState !== 'walk') {
+        this.changeState('idle');
+        this.isAttacking = false;
+        this.hitboxActive = false;
+      }
+      return;
+    }
+
+    const currentFrame = currentAnim[this.animFrame];
+    this.animFrameTimer += delta;
+
+    // Update hitbox state from frame data
+    this.hitboxActive = currentFrame.hitboxActive || false;
+
+    // Apply frame-based movement
+    if (currentFrame.moveSpeed && this.isAttacking) {
+      const body = this.body as Phaser.Physics.Arcade.Body;
+      body.setVelocityX(this.facing * currentFrame.moveSpeed);
+    }
+
+    // Apply visual effects based on frame
+    if (currentFrame.hitboxActive) {
+      this.setTint(0xff6600);
+    } else if (currentFrame.invincible) {
+      this.setAlpha(0.5);
+    } else {
+      this.clearTint();
+      this.setAlpha(1);
+    }
+
+    // Advance to next frame
+    if (this.animFrameTimer >= currentFrame.duration) {
+      this.animFrame++;
+      this.animFrameTimer = 0;
+    }
+  }
+
   lightAttack() {
-    if (this.attackCooldown > 0 || this.isAttacking) return;
+    if (this.isAttacking || this.animState === 'hit') return;
     
-    const body = this.body as Phaser.Physics.Arcade.Body;
+    this.changeState('light_attack');
     this.isAttacking = true;
     this.attackCooldown = 20;
-    this.hitboxActive = true;
-    
-    body.setVelocityX(this.facing * 100);
-    this.setTint(0xff0000);
-    this.scene.time.delayedCall(100, () => this.clearTint());
-    this.scene.time.delayedCall(300, () => {
-      this.isAttacking = false;
-      this.hitboxActive = false;
-    });
   }
 
   heavyAttack() {
-    if (this.attackCooldown > 0 || this.isAttacking) return;
+    if (this.isAttacking || this.animState === 'hit') return;
     
-    const body = this.body as Phaser.Physics.Arcade.Body;
+    this.changeState('heavy_attack');
     this.isAttacking = true;
     this.attackCooldown = 40;
-    this.hitboxActive = true;
-    
-    body.setVelocityX(this.facing * 150);
-    this.setTint(0xff6600);
-    this.scene.time.delayedCall(200, () => this.clearTint());
-    this.scene.time.delayedCall(500, () => {
-      this.isAttacking = false;
-      this.hitboxActive = false;
-    });
   }
 
   specialMove(type: string) {
-    if (this.engineChar.meter < 25) return;
+    if (this.engineChar.meter < 25 || this.isAttacking) return;
     
     this.engineChar.meter -= 25;
+    this.changeState('special');
     this.isAttacking = true;
-    this.hitboxActive = true;
     
-    this.createProjectile();
-    this.setTint(0x00ffff);
-    this.scene.time.delayedCall(300, () => this.clearTint());
-    this.scene.time.delayedCall(800, () => {
-      this.isAttacking = false;
-      this.hitboxActive = false;
-    });
+    // Create projectile on active frame
+    this.scene.time.delayedCall(100, () => this.createProjectile());
   }
 
   createProjectile() {
@@ -187,7 +251,8 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
   }
 
   block() {
-    if (!this.isAttacking && this.engineChar.state !== 'hit_stun') {
+    if (!this.isAttacking && this.animState !== 'hit') {
+      this.changeState('block');
       this.engineChar.state = 'blocking';
       this.setAlpha(0.7);
     }
@@ -195,6 +260,7 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
 
   stopBlock() {
     if (this.engineChar.state === 'blocking') {
+      this.changeState('idle');
       this.engineChar.state = 'idle';
       this.setAlpha(1);
     }
@@ -203,7 +269,9 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
   takeDamage(damage: number, knockback: number) {
     const body = this.body as Phaser.Physics.Arcade.Body;
     this.engineChar.health = Math.max(0, this.engineChar.health - damage);
+    this.changeState('hit');
     this.engineChar.state = 'hit_stun';
+    this.isAttacking = false;
     
     body.setVelocityX(knockback * -this.facing);
     body.setVelocityY(-100);
@@ -212,15 +280,19 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     this.scene.time.delayedCall(100, () => this.clearTint());
     this.scene.time.delayedCall(400, () => {
       if (this.engineChar.state === 'hit_stun') {
+        this.changeState('idle');
         this.engineChar.state = 'idle';
       }
     });
   }
 
-  update() {
+  update(delta: number) {
     const body = this.body as Phaser.Physics.Arcade.Body;
     this.attackBox.setPosition(this.x + (this.facing * 50), this.y);
     this.comboText.setPosition(this.x, this.y - 150);
+    
+    // Update animation state machine
+    this.updateAnimation(delta);
     
     if (this.attackCooldown > 0) {
       this.attackCooldown--;
@@ -228,6 +300,14 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     
     if (body.touching.down) {
       this.engineChar.inAir = false;
+      if (this.animState === 'jump') {
+        this.changeState('land');
+        this.scene.time.delayedCall(100, () => {
+          if (this.animState === 'land') this.changeState('idle');
+        });
+      }
+    } else {
+      this.engineChar.inAir = true;
     }
   }
 }
@@ -407,25 +487,39 @@ export class FightingGameScene extends Phaser.Scene {
     });
   }
 
-  update() {
+  update(time: number, delta: number) {
     if (this.gameOver) return;
 
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
-    if (this.cursors.left.isDown) {
-      playerBody.setVelocityX(-200);
-      this.player.facing = -1;
-      this.player.setFlipX(true);
-    } else if (this.cursors.right.isDown) {
-      playerBody.setVelocityX(200);
-      this.player.facing = 1;
-      this.player.setFlipX(false);
-    } else {
-      playerBody.setVelocityX(0);
+    
+    // Only allow movement if not in attacking state
+    if (!this.player.isAttacking && this.player.animState !== 'hit') {
+      if (this.cursors.left.isDown) {
+        playerBody.setVelocityX(-200);
+        this.player.facing = -1;
+        this.player.setFlipX(true);
+        if (playerBody.touching.down && this.player.animState !== 'walk') {
+          this.player.changeState('walk');
+        }
+      } else if (this.cursors.right.isDown) {
+        playerBody.setVelocityX(200);
+        this.player.facing = 1;
+        this.player.setFlipX(false);
+        if (playerBody.touching.down && this.player.animState !== 'walk') {
+          this.player.changeState('walk');
+        }
+      } else {
+        playerBody.setVelocityX(0);
+        if (playerBody.touching.down && this.player.animState === 'walk') {
+          this.player.changeState('idle');
+        }
+      }
     }
 
     if (Phaser.Input.Keyboard.JustDown(this.cursors.up!)) {
-      if (playerBody.touching.down) {
+      if (playerBody.touching.down && !this.player.isAttacking) {
         playerBody.setVelocityY(-500);
+        this.player.changeState('jump');
       }
     }
 
@@ -458,9 +552,9 @@ export class FightingGameScene extends Phaser.Scene {
       }
     }
 
-    // Update fighters
-    this.player.update();
-    this.opponent.update();
+    // Update fighters with delta time for smooth animations
+    this.player.update(delta);
+    this.opponent.update(delta);
     
     // Update UI
     this.player.updateHealthBar(150, 50, 350);
