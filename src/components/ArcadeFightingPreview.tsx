@@ -2,6 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Swords, Zap, Trophy, Shield } from "lucide-react";
+import davidVsGoliath from "@/assets/gameplay/david-vs-goliath.png";
+import mosesVsPharaoh from "@/assets/gameplay/moses-vs-pharaoh.png";
+import elijahVsJezebel from "@/assets/gameplay/elijah-vs-jezebel.png";
+import michaelVsLucifer from "@/assets/gameplay/michael-vs-lucifer.png";
 
 const ArcadeFightingPreview = () => {
   const navigate = useNavigate();
@@ -82,12 +86,53 @@ const ArcadeFightingPreview = () => {
           </p>
         </div>
 
-        {/* Preview Image Placeholder */}
-        <div className="mt-12 rounded-lg overflow-hidden border-4 border-primary/30 shadow-2xl">
-          <div className="aspect-video bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-            <div className="text-center space-y-4">
-              <Swords className="h-24 w-24 mx-auto text-primary opacity-50" />
-              <p className="text-muted-foreground">Game Preview</p>
+        {/* Gameplay Screenshots Gallery */}
+        <div className="mt-12 space-y-4">
+          <h3 className="text-2xl font-bold text-center mb-6">Gameplay Screenshots</h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="rounded-lg overflow-hidden border-4 border-primary/30 shadow-2xl hover-scale">
+              <img 
+                src={davidVsGoliath} 
+                alt="David vs Goliath gameplay screenshot showing epic battle"
+                className="w-full h-auto"
+              />
+              <div className="p-3 bg-card">
+                <p className="text-sm font-semibold">David vs Goliath</p>
+                <p className="text-xs text-muted-foreground">Classic matchup in ancient arena</p>
+              </div>
+            </div>
+            <div className="rounded-lg overflow-hidden border-4 border-primary/30 shadow-2xl hover-scale">
+              <img 
+                src={mosesVsPharaoh} 
+                alt="Moses vs Pharaoh gameplay with special moves at Red Sea"
+                className="w-full h-auto"
+              />
+              <div className="p-3 bg-card">
+                <p className="text-sm font-semibold">Moses vs Pharaoh</p>
+                <p className="text-xs text-muted-foreground">Special moves at the Red Sea arena</p>
+              </div>
+            </div>
+            <div className="rounded-lg overflow-hidden border-4 border-primary/30 shadow-2xl hover-scale">
+              <img 
+                src={elijahVsJezebel} 
+                alt="Elijah vs Jezebel with fire and dark magic combat"
+                className="w-full h-auto"
+              />
+              <div className="p-3 bg-card">
+                <p className="text-sm font-semibold">Elijah vs Jezebel</p>
+                <p className="text-xs text-muted-foreground">7-hit combo with divine fire power</p>
+              </div>
+            </div>
+            <div className="rounded-lg overflow-hidden border-4 border-primary/30 shadow-2xl hover-scale">
+              <img 
+                src={michaelVsLucifer} 
+                alt="Michael vs Lucifer ultimate special move battle"
+                className="w-full h-auto"
+              />
+              <div className="p-3 bg-card">
+                <p className="text-sm font-semibold">Michael vs Lucifer</p>
+                <p className="text-xs text-muted-foreground">Ultimate super move clash</p>
+              </div>
             </div>
           </div>
         </div>
