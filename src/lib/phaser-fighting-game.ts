@@ -35,7 +35,22 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     config: FighterConfig,
     isPlayer: boolean
   ) {
-    super(scene, x, y, config.spriteKey);
+    // Create a colored circle as character sprite
+    super(scene, x, y, 'character');
+    
+    // Create the visual representation
+    const color = config.alignment === 'Good' ? 0x4169e1 : 0xdc143c;
+    const graphics = scene.add.graphics();
+    graphics.fillStyle(color);
+    graphics.fillCircle(0, 0, 40);
+    graphics.lineStyle(4, 0xffffff);
+    graphics.strokeCircle(0, 0, 40);
+    
+    // Convert graphics to texture
+    graphics.generateTexture('character-' + config.name, 80, 80);
+    graphics.destroy();
+    
+    this.setTexture('character-' + config.name);
     scene.add.existing(this);
     scene.physics.add.existing(this);
     
@@ -59,27 +74,37 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     body.setCollideWorldBounds(true);
     body.setDragX(500);
     body.setMaxVelocity(400, 800);
-    this.setScale(2);
+    body.setSize(60, 80);
+    this.setScale(1);
 
     // Attack hitbox (invisible)
     this.attackBox = scene.add.rectangle(x, y, 60, 80, 0xff0000, 0);
     scene.physics.add.existing(this.attackBox);
     
-    // UI elements
-    const barY = isPlayer ? 30 : 30;
-    const barX = isPlayer ? 50 : scene.scale.width - 250;
+    // UI elements - positioned in the ornate top frame
+    const barY = 45;
+    const barX = isPlayer ? 60 : scene.scale.width - 360;
     
     this.healthBar = scene.add.graphics();
     this.meterBar = scene.add.graphics();
     this.updateHealthBar(barX, barY);
-    this.updateMeterBar(barX, barY + 25);
+    this.updateMeterBar(barX, barY + 30);
     
-    this.comboText = scene.add.text(x, y - 100, '', {
-      fontSize: '24px',
-      color: '#ff0000',
+    // Character name label
+    const nameLabel = scene.add.text(barX + 150, barY - 20, config.name, {
+      fontSize: '20px',
+      color: '#d4af37',
       fontStyle: 'bold',
       stroke: '#000',
-      strokeThickness: 4
+      strokeThickness: 3
+    }).setOrigin(0.5);
+    
+    this.comboText = scene.add.text(x, y - 100, '', {
+      fontSize: '32px',
+      color: '#ff6600',
+      fontStyle: 'bold',
+      stroke: '#000',
+      strokeThickness: 6
     }).setOrigin(0.5);
 
   }
@@ -88,27 +113,35 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     this.healthBar.clear();
     const healthPercent = Math.max(0, this.engineChar.health / 100);
     
-    // Background
-    this.healthBar.fillStyle(0x000000, 0.7);
-    this.healthBar.fillRect(x, y, 200, 20);
+    // Background (darker)
+    this.healthBar.fillStyle(0x1a1a1a, 0.9);
+    this.healthBar.fillRect(x, y, 300, 25);
     
-    // Health bar
-    const healthColor = healthPercent > 0.5 ? 0x00ff00 : healthPercent > 0.25 ? 0xffff00 : 0xff0000;
+    // Health bar with gradient effect
+    const healthColor = healthPercent > 0.5 ? 0x00ff00 : healthPercent > 0.25 ? 0xffaa00 : 0xff0000;
     this.healthBar.fillStyle(healthColor);
-    this.healthBar.fillRect(x + 2, y + 2, (200 - 4) * healthPercent, 16);
+    this.healthBar.fillRect(x + 3, y + 3, (300 - 6) * healthPercent, 19);
+    
+    // Border
+    this.healthBar.lineStyle(3, 0xd4af37);
+    this.healthBar.strokeRect(x, y, 300, 25);
   }
 
   updateMeterBar(x: number, y: number) {
     this.meterBar.clear();
-    const meterPercent = this.engineChar.meter / 100;
+    const meterPercent = Math.max(0, Math.min(1, this.engineChar.meter / 100));
     
     // Background
-    this.meterBar.fillStyle(0x000000, 0.7);
-    this.meterBar.fillRect(x, y, 200, 10);
+    this.meterBar.fillStyle(0x1a1a1a, 0.9);
+    this.meterBar.fillRect(x, y, 300, 15);
     
-    // Meter bar
-    this.meterBar.fillStyle(0x00ffff);
-    this.meterBar.fillRect(x + 2, y + 2, (200 - 4) * meterPercent, 6);
+    // Meter bar (cyan/blue gradient)
+    this.meterBar.fillStyle(0x00ddff);
+    this.meterBar.fillRect(x + 2, y + 2, (300 - 4) * meterPercent, 11);
+    
+    // Border
+    this.meterBar.lineStyle(2, 0x00ffff);
+    this.meterBar.strokeRect(x, y, 300, 15);
   }
 
   addInput(input: string) {
@@ -351,30 +384,60 @@ export class FightingGameScene extends Phaser.Scene {
   }
 
   preload() {
-    // Load arena backgrounds
-    // Character sprites will be loaded from React component
+    // Character images will be loaded dynamically
+    // For now, we'll use colored rectangles as placeholders
   }
 
   create() {
     // Skip if no config data
     if (!this.playerConfig || !this.opponentConfig) return;
-    // Arena background
+    
+    // Arena background - temple/ancient arena style
     const bg = this.add.rectangle(
       this.scale.width / 2,
       this.scale.height / 2,
       this.scale.width,
       this.scale.height,
-      0x1a1a2e
+      0x4a3c2e
     );
+    
+    // Add some atmospheric elements
+    this.add.rectangle(0, 0, this.scale.width, 120, 0x2d2416, 0.8).setOrigin(0);
+    
+    // Ornate UI frame at top
+    const topFrame = this.add.graphics();
+    topFrame.fillStyle(0x8b6f47, 0.9);
+    topFrame.fillRect(0, 0, this.scale.width, 140);
+    topFrame.lineStyle(4, 0xd4af37);
+    topFrame.strokeRect(20, 20, this.scale.width - 40, 100);
+    
+    // Timer in center
+    const timerBg = this.add.circle(this.scale.width / 2, 60, 50, 0x1a1a1a);
+    const timerRing = this.add.circle(this.scale.width / 2, 60, 50);
+    timerRing.setStrokeStyle(6, 0xd4af37);
+    const timerText = this.add.text(this.scale.width / 2, 60, '00', {
+      fontSize: '48px',
+      color: '#d4af37',
+      fontStyle: 'bold'
+    }).setOrigin(0.5);
 
-    // Ground platform
+    // Ground platform - stone arena floor
     const ground = this.add.rectangle(
       this.scale.width / 2,
       this.scale.height - 50,
       this.scale.width,
       100,
-      0x2d4356
+      0x6b5d4f
     );
+    
+    // Add texture to ground
+    const groundGraphics = this.add.graphics();
+    groundGraphics.fillStyle(0x8b7355);
+    for (let i = 0; i < 20; i++) {
+      const x = (i * this.scale.width / 20);
+      groundGraphics.fillRect(x, this.scale.height - 100, this.scale.width / 20 - 2, 100);
+    }
+    
     this.physics.add.existing(ground, true); // true = static body
 
     // Create fighters
