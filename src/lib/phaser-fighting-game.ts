@@ -59,9 +59,8 @@ export class FighterSprite extends Phaser.Physics.Matter.Sprite {
     this.setBounce(0);
     this.setScale(2);
 
-    // Attack hitbox (invisible)
+    // Attack hitbox (invisible) - no physics needed, just visual
     this.attackBox = scene.add.rectangle(x, y, 60, 80, 0xff0000, 0);
-    scene.physics.add.existing(this.attackBox);
     
     // UI elements
     const barY = isPlayer ? 30 : 30;
@@ -230,9 +229,10 @@ export class FighterSprite extends Phaser.Physics.Matter.Sprite {
       15,
       0x00ffff
     );
-    this.scene.physics.add.existing(projectile);
-    const body = projectile.body as Phaser.Physics.Arcade.Body;
-    body.setVelocityX(this.facing * 400);
+    
+    // Manually move projectile using Matter physics
+    this.scene.matter.add.gameObject(projectile);
+    (projectile.body as MatterJS.BodyType).velocity.x = this.facing * 8;
     
     // Destroy after 2 seconds
     this.scene.time.delayedCall(2000, () => projectile.destroy());
