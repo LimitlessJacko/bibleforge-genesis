@@ -20,7 +20,8 @@ const Index = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [musicInitialized, setMusicInitialized] = useState(false);
   const backgroundMusicRef = useRef<Howl | null>(null);
 
   useEffect(() => {
@@ -49,15 +50,6 @@ const Index = () => {
 
   // Initialize orchestral background music
   useEffect(() => {
-    if (!backgroundMusicRef.current) {
-      backgroundMusicRef.current = new Howl({
-        src: ['https://cdn.pixabay.com/audio/2024/03/21/audio_b3e5b2a390.mp3'], // Orchestral with harp and trumpet
-        loop: true,
-        volume: 0.25,
-        autoplay: true,
-      });
-    }
-
     return () => {
       if (backgroundMusicRef.current) {
         backgroundMusicRef.current.unload();
@@ -66,12 +58,36 @@ const Index = () => {
     };
   }, []);
 
-  // Handle mute toggle
-  useEffect(() => {
-    if (backgroundMusicRef.current) {
-      backgroundMusicRef.current.mute(isMuted);
+  const toggleMusic = () => {
+    if (!musicInitialized) {
+      // First click - initialize and play
+      backgroundMusicRef.current = new Howl({
+        src: ['https://cdn.pixabay.com/audio/2022/03/10/audio_4f15ab7fa8.mp3'],
+        loop: true,
+        volume: 0.25,
+        onload: () => {
+          console.log('Music loaded successfully');
+        },
+        onloaderror: (id, error) => {
+          console.error('Failed to load music:', error);
+        },
+      });
+      backgroundMusicRef.current.play();
+      setMusicInitialized(true);
+      setIsMuted(false);
+    } else {
+      // Toggle mute/unmute
+      const newMuted = !isMuted;
+      setIsMuted(newMuted);
+      if (backgroundMusicRef.current) {
+        if (newMuted) {
+          backgroundMusicRef.current.pause();
+        } else {
+          backgroundMusicRef.current.play();
+        }
+      }
     }
-  }, [isMuted]);
+  };
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
@@ -95,10 +111,11 @@ const Index = () => {
       {/* Volume Control - Fixed Position */}
       <div className="fixed top-4 left-4 z-50">
         <Button
-          onClick={() => setIsMuted(!isMuted)}
+          onClick={toggleMusic}
           variant="outline"
           size="icon"
           className="shadow-lg"
+          title={!musicInitialized ? "Click to start music" : isMuted ? "Unmute music" : "Pause music"}
         >
           {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
         </Button>
