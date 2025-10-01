@@ -6,6 +6,7 @@ import { User } from "@supabase/supabase-js";
 import Hero from "@/components/Hero";
 import Characters from "@/components/Characters";
 import GameModes from "@/components/GameModes";
+import ArcadeFightingPreview from "@/components/ArcadeFightingPreview";
 import LimitlessBoots from "@/components/LimitlessBoots";
 import Tokenomics from "@/components/Tokenomics";
 import Footer from "@/components/Footer";
@@ -89,6 +90,7 @@ const Index = () => {
       <Hero />
       <Characters />
       <GameModes />
+      <ArcadeFightingPreview />
       <LimitlessBoots />
       <Tokenomics />
       <Footer />
