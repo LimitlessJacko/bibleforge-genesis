@@ -18,18 +18,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
 // Import character images
-import jesusImg from "@/assets/characters/jesus.jpg";
-import davidImg from "@/assets/characters/david.jpg";
-import solomonImg from "@/assets/characters/solomon.jpg";
-import deborahImg from "@/assets/characters/deborah.jpg";
-import nehemiahImg from "@/assets/characters/nehemiah.jpg";
-import elijahImg from "@/assets/characters/elijah.jpg";
-import michaelImg from "@/assets/characters/michael.jpg";
-import satanImg from "@/assets/characters/satan.jpg";
-import goliathImg from "@/assets/characters/goliath.jpg";
-import pharaohImg from "@/assets/characters/pharaoh.jpg";
-import jezebelImg from "@/assets/characters/jezebel.jpg";
-import judasImg from "@/assets/characters/judas.jpg";
+import jesusImg from "@/assets/characters/jesus.png";
+import davidImg from "@/assets/characters/david.png";
+import solomonImg from "@/assets/characters/solomon.png";
+import deborahImg from "@/assets/characters/deborah.png";
+import nehemiahImg from "@/assets/characters/nehemiah.png";
+import elijahImg from "@/assets/characters/elijah.png";
+import michaelImg from "@/assets/characters/michael.png";
+import satanImg from "@/assets/characters/satan.png";
+import goliathImg from "@/assets/characters/goliath.png";
+import pharaohImg from "@/assets/characters/pharaoh.png";
+import jezebelImg from "@/assets/characters/jezebel.png";
+import judasImg from "@/assets/characters/judas.png";
 
 type PieceType = "king" | "queen" | "rook" | "knight" | "bishop" | "pawn" | null;
 type Player = "light" | "dark";

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Swords, Shield, Crown } from "lucide-react";
-import heroBanner from "@/assets/hero-banner.jpg";
+import heroBanner from "@/assets/hero-banner.png";
 
 const Hero = () => {
   const scrollToSection = (id: string) => {

@@ -5,21 +5,21 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Shield, Sword, Zap, Heart, Target, Brain, BookOpen } from "lucide-react";
 import { toast } from "sonner";
-import michaelImg from "@/assets/characters/michael.jpg";
-import davidImg from "@/assets/characters/david.jpg";
-import deborahImg from "@/assets/characters/deborah.jpg";
-import solomonImg from "@/assets/characters/solomon.jpg";
-import jesusImg from "@/assets/characters/jesus.jpg";
-import nehemiahImg from "@/assets/characters/nehemiah.jpg";
-import satanImg from "@/assets/characters/satan.jpg";
-import goliathImg from "@/assets/characters/goliath.jpg";
-import jezebelImg from "@/assets/characters/jezebel.jpg";
-import pharaohImg from "@/assets/characters/pharaoh.jpg";
-import judasImg from "@/assets/characters/judas.jpg";
-import herodImg from "@/assets/characters/herod.jpg";
-import ancientOfDaysImg from "@/assets/characters/ancient-of-days.jpg";
-import elijahImg from "@/assets/characters/elijah.jpg";
-import beastImg from "@/assets/characters/beast.jpg";
+import michaelImg from "@/assets/characters/michael.png";
+import davidImg from "@/assets/characters/david.png";
+import deborahImg from "@/assets/characters/deborah.png";
+import solomonImg from "@/assets/characters/solomon.png";
+import jesusImg from "@/assets/characters/jesus.png";
+import nehemiahImg from "@/assets/characters/nehemiah.png";
+import satanImg from "@/assets/characters/satan.png";
+import goliathImg from "@/assets/characters/goliath.png";
+import jezebelImg from "@/assets/characters/jezebel.png";
+import pharaohImg from "@/assets/characters/pharaoh.png";
+import judasImg from "@/assets/characters/judas.png";
+import herodImg from "@/assets/characters/herod.png";
+import ancientOfDaysImg from "@/assets/characters/ancient-of-days.png";
+import elijahImg from "@/assets/characters/elijah.png";
+import beastImg from "@/assets/characters/beast.png";
 
 const characters = [
   {

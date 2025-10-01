@@ -16,30 +16,30 @@ import { PhaserGame } from "@/components/PhaserGame";
 import type { FighterConfig } from "@/lib/phaser-fighting-game";
 
 // Import character images
-import mosesImg from "@/assets/characters/moses.jpg";
-import davidImg from "@/assets/characters/david.jpg";
-import estherImg from "@/assets/characters/esther.jpg";
-import elijahImg from "@/assets/characters/elijah.jpg";
-import maryImg from "@/assets/characters/mary.jpg";
-import michaelImg from "@/assets/characters/michael.jpg";
-import pharaohImg from "@/assets/characters/pharaoh.jpg";
-import goliathImg from "@/assets/characters/goliath.jpg";
-import jezebelImg from "@/assets/characters/jezebel.jpg";
-import nebuchadnezzarImg from "@/assets/characters/nebuchadnezzar.jpg";
-import herodImg from "@/assets/characters/herod.jpg";
-import satanImg from "@/assets/characters/satan.jpg";
-import jesusImg from "@/assets/characters/jesus.jpg";
-import paulImg from "@/assets/characters/paul.jpg";
-import luciferImg from "@/assets/characters/lucifer.jpg";
+import mosesImg from "@/assets/characters/moses.png";
+import davidImg from "@/assets/characters/david.png";
+import estherImg from "@/assets/characters/esther.png";
+import elijahImg from "@/assets/characters/elijah.png";
+import maryImg from "@/assets/characters/mary.png";
+import michaelImg from "@/assets/characters/michael.png";
+import pharaohImg from "@/assets/characters/pharaoh.png";
+import goliathImg from "@/assets/characters/goliath.png";
+import jezebelImg from "@/assets/characters/jezebel.png";
+import nebuchadnezzarImg from "@/assets/characters/nebuchadnezzar.png";
+import herodImg from "@/assets/characters/herod.png";
+import satanImg from "@/assets/characters/satan.png";
+import jesusImg from "@/assets/characters/jesus.png";
+import paulImg from "@/assets/characters/paul.png";
+import luciferImg from "@/assets/characters/lucifer.png";
 
 // Import booster images
-import holySpiritImg from "@/assets/boosters/holy-spirit.jpg";
-import armorOfGodImg from "@/assets/boosters/armor-of-god.jpg";
+import holySpiritImg from "@/assets/boosters/holy-spirit.png";
+import armorOfGodImg from "@/assets/boosters/armor-of-god.png";
 
 // Import arena images
-import redSeaArena from "@/assets/arenas/red-sea.jpg";
-import jerusalemTempleArena from "@/assets/arenas/jerusalem-temple.jpg";
-import valleyOfElahArena from "@/assets/arenas/valley-of-elah.jpg";
+import redSeaArena from "@/assets/arenas/red-sea.png";
+import jerusalemTempleArena from "@/assets/arenas/jerusalem-temple.png";
+import valleyOfElahArena from "@/assets/arenas/valley-of-elah.png";
 
 const characterImages: { [key: string]: string } = {
   "Moses": mosesImg,

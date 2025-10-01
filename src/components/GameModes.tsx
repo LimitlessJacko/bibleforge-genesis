@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Swords, Crown, BookOpen } from "lucide-react";
-import chessMode from "@/assets/chess-mode.jpg";
+import chessMode from "@/assets/chess-mode.png";
 
 const gameModes = [
   {

@@ -2,9 +2,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Zap, Shield, Sparkles, Flame, Cross } from "lucide-react";
-import bootsImage from "@/assets/limitless-boots.jpg";
-import holySpiritImg from "@/assets/boosters/holy-spirit.jpg";
-import armorOfGodImg from "@/assets/boosters/armor-of-god.jpg";
+import bootsImage from "@/assets/limitless-boots.png";
+import holySpiritImg from "@/assets/boosters/holy-spirit.png";
+import armorOfGodImg from "@/assets/boosters/armor-of-god.png";
 import { toast } from "sonner";
 
 const bootsTiers = [
