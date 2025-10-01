@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,13 +12,16 @@ import Tokenomics from "@/components/Tokenomics";
 import Footer from "@/components/Footer";
 import { AnimationsShowcase } from "@/components/AnimationsShowcase";
 import { LudiUnlock } from "@/components/LudiUnlock";
-import { LogOut, Trophy, User as UserIcon } from "lucide-react";
+import { LogOut, Trophy, User as UserIcon, Volume2, VolumeX } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Howl } from "howler";
 
 const Index = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const backgroundMusicRef = useRef<Howl | null>(null);
 
   useEffect(() => {
     // Get initial session
@@ -44,6 +47,32 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Initialize orchestral background music
+  useEffect(() => {
+    if (!backgroundMusicRef.current) {
+      backgroundMusicRef.current = new Howl({
+        src: ['https://cdn.pixabay.com/audio/2024/03/21/audio_b3e5b2a390.mp3'], // Orchestral with harp and trumpet
+        loop: true,
+        volume: 0.25,
+        autoplay: true,
+      });
+    }
+
+    return () => {
+      if (backgroundMusicRef.current) {
+        backgroundMusicRef.current.unload();
+        backgroundMusicRef.current = null;
+      }
+    };
+  }, []);
+
+  // Handle mute toggle
+  useEffect(() => {
+    if (backgroundMusicRef.current) {
+      backgroundMusicRef.current.mute(isMuted);
+    }
+  }, [isMuted]);
+
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from('profiles')
@@ -63,6 +92,18 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
+      {/* Volume Control - Fixed Position */}
+      <div className="fixed top-4 left-4 z-50">
+        <Button
+          onClick={() => setIsMuted(!isMuted)}
+          variant="outline"
+          size="icon"
+          className="shadow-lg"
+        >
+          {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+        </Button>
+      </div>
+
       {/* User Profile Bar */}
       <div className="fixed top-0 right-0 z-50 p-4">
         {user && profile ? (
