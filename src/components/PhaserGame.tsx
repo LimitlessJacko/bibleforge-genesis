@@ -7,9 +7,11 @@ interface PhaserGameProps {
   opponentConfig: FighterConfig;
   arenaKey: string;
   onGameEnd: (playerWon: boolean) => void;
+  playerSuperMove?: string;
+  opponentSuperMove?: string;
 }
 
-export const PhaserGame = ({ playerConfig, opponentConfig, arenaKey, onGameEnd }: PhaserGameProps) => {
+export const PhaserGame = ({ playerConfig, opponentConfig, arenaKey, onGameEnd, playerSuperMove, opponentSuperMove }: PhaserGameProps) => {
   const gameRef = useRef<Phaser.Game | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -41,7 +43,9 @@ export const PhaserGame = ({ playerConfig, opponentConfig, arenaKey, onGameEnd }
         scene.scene.restart({
           playerConfig,
           opponentConfig,
-          arenaKey
+          arenaKey,
+          playerSuperMove,
+          opponentSuperMove
         });
         (scene as any).onGameEnd = onGameEnd;
       }

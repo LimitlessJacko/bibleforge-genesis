@@ -31,6 +31,12 @@ import satanImg from "@/assets/characters/satan.png";
 import jesusImg from "@/assets/characters/jesus.png";
 import paulImg from "@/assets/characters/paul.png";
 import luciferImg from "@/assets/characters/lucifer.png";
+import solomonImg from "@/assets/characters/solomon.png";
+import deborahImg from "@/assets/characters/deborah.png";
+import nehemiahImg from "@/assets/characters/nehemiah.png";
+import judasImg from "@/assets/characters/judas.png";
+import ancientOfDaysImg from "@/assets/characters/ancient-of-days.png";
+import beastImg from "@/assets/characters/beast.png";
 
 // Import booster images
 import holySpiritImg from "@/assets/boosters/holy-spirit.png";
@@ -56,7 +62,13 @@ const characterImages: { [key: string]: string } = {
   "Satan": satanImg,
   "Jesus": jesusImg,
   "Paul": paulImg,
-  "Lucifer": luciferImg
+  "Lucifer": luciferImg,
+  "Solomon": solomonImg,
+  "Deborah": deborahImg,
+  "Nehemiah": nehemiahImg,
+  "Judas": judasImg,
+  "Ancient of Days": ancientOfDaysImg,
+  "The Beast": beastImg
 };
 
 type Booster = {
@@ -95,25 +107,31 @@ const arenas = [
 
 const characters = [
   // Good Characters
-  { id: "char_0001", name: "Moses", health: 800, attack: 200, defense: 170, spirit: 450, alignment: "Good" },
-  { id: "char_0002", name: "David", health: 700, attack: 220, defense: 140, spirit: 380, alignment: "Good" },
-  { id: "char_0003", name: "Esther", health: 650, attack: 180, defense: 150, spirit: 400, alignment: "Good" },
-  { id: "char_0004", name: "Elijah", health: 750, attack: 240, defense: 160, spirit: 500, alignment: "Good" },
-  { id: "char_0005", name: "Mary", health: 700, attack: 160, defense: 180, spirit: 480, alignment: "Good" },
-  { id: "char_0006", name: "Michael", health: 850, attack: 260, defense: 200, spirit: 520, alignment: "Good" },
+  { id: "char_0001", name: "Moses", health: 800, attack: 200, defense: 170, spirit: 450, alignment: "Good", superMove: "Plague Strike" },
+  { id: "char_0002", name: "David", health: 700, attack: 220, defense: 140, spirit: 380, alignment: "Good", superMove: "Sling of Faith" },
+  { id: "char_0003", name: "Esther", health: 650, attack: 180, defense: 150, spirit: 400, alignment: "Good", superMove: "Royal Decree" },
+  { id: "char_0004", name: "Elijah", health: 750, attack: 240, defense: 160, spirit: 500, alignment: "Good", superMove: "Fire from Heaven" },
+  { id: "char_0005", name: "Mary", health: 700, attack: 160, defense: 180, spirit: 480, alignment: "Good", superMove: "Grace Aura" },
+  { id: "char_0006", name: "Michael", health: 850, attack: 260, defense: 200, spirit: 520, alignment: "Good", superMove: "Angelic Sword" },
+  { id: "char_0016", name: "Solomon", health: 780, attack: 210, defense: 190, spirit: 450, alignment: "Good", superMove: "Wisdom Strike" },
+  { id: "char_0017", name: "Deborah", health: 720, attack: 230, defense: 160, spirit: 430, alignment: "Good", superMove: "Judge's Verdict" },
+  { id: "char_0018", name: "Nehemiah", health: 820, attack: 200, defense: 200, spirit: 410, alignment: "Good", superMove: "Wall Breaker" },
   
   // Evil Characters
-  { id: "char_0007", name: "Pharaoh", health: 800, attack: 210, defense: 180, spirit: 350, alignment: "Evil" },
-  { id: "char_0008", name: "Goliath", health: 950, attack: 300, defense: 220, spirit: 250, alignment: "Evil" },
-  { id: "char_0009", name: "Jezebel", health: 700, attack: 190, defense: 150, spirit: 420, alignment: "Evil" },
-  { id: "char_0010", name: "Nebuchadnezzar", health: 850, attack: 230, defense: 200, spirit: 380, alignment: "Evil" },
-  { id: "char_0011", name: "Herod", health: 750, attack: 200, defense: 170, spirit: 340, alignment: "Evil" },
-  { id: "char_0012", name: "Satan", health: 900, attack: 280, defense: 190, spirit: 550, alignment: "Evil" },
+  { id: "char_0007", name: "Pharaoh", health: 800, attack: 210, defense: 180, spirit: 350, alignment: "Evil", superMove: "Chariot Charge" },
+  { id: "char_0008", name: "Goliath", health: 950, attack: 300, defense: 220, spirit: 250, alignment: "Evil", superMove: "Giant's Roar" },
+  { id: "char_0009", name: "Jezebel", health: 700, attack: 190, defense: 150, spirit: 420, alignment: "Evil", superMove: "Wicked Curse" },
+  { id: "char_0010", name: "Nebuchadnezzar", health: 850, attack: 230, defense: 200, spirit: 380, alignment: "Evil", superMove: "Furnace Rage" },
+  { id: "char_0011", name: "Herod", health: 750, attack: 200, defense: 170, spirit: 340, alignment: "Evil", superMove: "Tyrant's Wrath" },
+  { id: "char_0012", name: "Satan", health: 900, attack: 280, defense: 190, spirit: 550, alignment: "Evil", superMove: "Abyss Chains" },
+  { id: "char_0019", name: "Judas", health: 770, attack: 220, defense: 165, spirit: 360, alignment: "Evil", superMove: "Betrayal Strike" },
   
   // Unlockable Characters
-  { id: "char_0013", name: "Jesus", health: 1000, attack: 350, defense: 250, spirit: 999, alignment: "Good", unlockable: true },
-  { id: "char_0014", name: "Paul", health: 800, attack: 270, defense: 210, spirit: 600, alignment: "Good", unlockable: true },
-  { id: "char_0015", name: "Lucifer", health: 950, attack: 320, defense: 230, spirit: 666, alignment: "Evil", unlockable: true }
+  { id: "char_0013", name: "Jesus", health: 1000, attack: 350, defense: 250, spirit: 999, alignment: "Good", unlockable: true, superMove: "Divine Radiance" },
+  { id: "char_0014", name: "Paul", health: 800, attack: 270, defense: 210, spirit: 600, alignment: "Good", unlockable: true, superMove: "Gospel Thunder" },
+  { id: "char_0015", name: "Lucifer", health: 950, attack: 320, defense: 230, spirit: 666, alignment: "Evil", unlockable: true, superMove: "Fallen Wings" },
+  { id: "char_0020", name: "Ancient of Days", health: 1100, attack: 400, defense: 280, spirit: 999, alignment: "Good", unlockable: true, superMove: "Eternal Judgment" },
+  { id: "char_0021", name: "The Beast", health: 1000, attack: 340, defense: 240, spirit: 777, alignment: "Evil", unlockable: true, superMove: "Mark of Chaos" }
 ];
 
 const ArcadeFighting = () => {
@@ -451,12 +469,13 @@ const ArcadeFighting = () => {
 
       if (hitResult) {
         lastHitTimeRef.current = Date.now();
+        const superMoveName = player?.superMove || "SPECIAL MOVE";
         setBattleLog(prev => [...prev.slice(-5), 
-          `${player?.name} SPECIAL MOVE! ${Math.floor(hitResult.damage)} damage!`
+          `${player?.name} ${superMoveName}! ${Math.floor(hitResult.damage)} damage!`
         ]);
         toast({
-          title: "⚡ SPECIAL MOVE!",
-          description: `Powerful attack!`,
+          title: `⚡ ${superMoveName}!`,
+          description: `${player?.name} unleashes their signature move!`,
           duration: 1500
         });
       }
@@ -492,12 +511,13 @@ const ArcadeFighting = () => {
       }, delay);
     });
 
+    const superMoveName = player?.superMove || "HYPER COMBO";
     setBattleLog(prev => [...prev.slice(-5), 
-      `${player?.name} HYPER COMBO!!! ULTIMATE ATTACK!`
+      `${player?.name} ${superMoveName}!!! ULTIMATE ATTACK!`
     ]);
     
     toast({ 
-      title: "🔥 HYPER COMBO! 🔥", 
+      title: `🔥 ${superMoveName}! 🔥`, 
       description: `${player?.name} unleashes ultimate power!`,
       className: "text-xl font-bold"
     });
@@ -560,6 +580,11 @@ const ArcadeFighting = () => {
       const newUnlocks = [...unlockedCharacters];
       let unlockedNewChar = false;
       
+      if (newWins >= 5 && !newUnlocks.includes("char_0006")) {
+        newUnlocks.push("char_0006"); // Michael
+        unlockedNewChar = true;
+        toast({ title: "🎉 NEW CHARACTER UNLOCKED!", description: "Michael is now available!", className: "text-2xl font-bold" });
+      }
       if (newWins >= 10 && !newUnlocks.includes("char_0013")) {
         newUnlocks.push("char_0013"); // Jesus
         unlockedNewChar = true;
@@ -574,6 +599,16 @@ const ArcadeFighting = () => {
         newUnlocks.push("char_0015"); // Lucifer
         unlockedNewChar = true;
         toast({ title: "🎉 NEW CHARACTER UNLOCKED!", description: "Lucifer is now available!", className: "text-2xl font-bold" });
+      }
+      if (newWins >= 20 && !newUnlocks.includes("char_0020")) {
+        newUnlocks.push("char_0020"); // Ancient of Days
+        unlockedNewChar = true;
+        toast({ title: "🎉 LEGENDARY CHARACTER UNLOCKED!", description: "Ancient of Days has been revealed!", className: "text-2xl font-bold" });
+      }
+      if (opponent?.name === "Lucifer" && playerWon && !newUnlocks.includes("char_0021")) {
+        newUnlocks.push("char_0021"); // The Beast (unlock by defeating Lucifer)
+        unlockedNewChar = true;
+        toast({ title: "🎉 SECRET CHARACTER UNLOCKED!", description: "The Beast has been unleashed!", className: "text-2xl font-bold" });
       }
       
       if (unlockedNewChar) {
@@ -669,16 +704,22 @@ const ArcadeFighting = () => {
                         )}
                       </div>
                       <h3 className="font-bold text-center text-lg">{char.name}</h3>
-                      <div className="text-xs space-y-1 pt-2 border-t border-border">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">ATK:</span>
-                          <span className="font-semibold">{char.attack}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">DEF:</span>
-                          <span className="font-semibold">{char.defense}</span>
-                        </div>
-                      </div>
+                       <div className="text-xs space-y-1 pt-2 border-t border-border">
+                         <div className="flex justify-between">
+                           <span className="text-muted-foreground">ATK:</span>
+                           <span className="font-semibold">{char.attack}</span>
+                         </div>
+                         <div className="flex justify-between">
+                           <span className="text-muted-foreground">DEF:</span>
+                           <span className="font-semibold">{char.defense}</span>
+                         </div>
+                         {char.superMove && (
+                           <div className="flex flex-col pt-1 border-t border-border/50">
+                             <span className="text-muted-foreground">Super:</span>
+                             <span className="font-semibold text-accent text-[10px]">{char.superMove}</span>
+                           </div>
+                         )}
+                       </div>
                     </div>
 
                     {/* Glow effect on hover */}
@@ -751,16 +792,22 @@ const ArcadeFighting = () => {
                         )}
                       </div>
                       <h3 className="font-bold text-center text-lg">{char.name}</h3>
-                      <div className="text-xs space-y-1 pt-2 border-t border-border">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">ATK:</span>
-                          <span className="font-semibold">{char.attack}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">DEF:</span>
-                          <span className="font-semibold">{char.defense}</span>
-                        </div>
-                      </div>
+                       <div className="text-xs space-y-1 pt-2 border-t border-border">
+                         <div className="flex justify-between">
+                           <span className="text-muted-foreground">ATK:</span>
+                           <span className="font-semibold">{char.attack}</span>
+                         </div>
+                         <div className="flex justify-between">
+                           <span className="text-muted-foreground">DEF:</span>
+                           <span className="font-semibold">{char.defense}</span>
+                         </div>
+                         {char.superMove && (
+                           <div className="flex flex-col pt-1 border-t border-border/50">
+                             <span className="text-muted-foreground">Super:</span>
+                             <span className="font-semibold text-accent text-[10px]">{char.superMove}</span>
+                           </div>
+                         )}
+                       </div>
                     </div>
 
                     {/* Glow effect on hover */}
@@ -786,8 +833,11 @@ const ArcadeFighting = () => {
             
             <div className="text-center text-sm text-muted-foreground mt-4">
               Total Wins: <span className="font-bold text-primary">{wins}</span>
-              {wins < 10 && <p className="mt-2">Win {10 - wins} more battles to unlock Jesus & Paul!</p>}
+              {wins < 5 && <p className="mt-2">Win {5 - wins} more battles to unlock Michael!</p>}
+              {wins >= 5 && wins < 10 && <p className="mt-2">Win {10 - wins} more battles to unlock Jesus & Paul!</p>}
               {wins >= 10 && wins < 15 && <p className="mt-2">Win {15 - wins} more battles to unlock Lucifer!</p>}
+              {wins >= 15 && wins < 20 && <p className="mt-2">Win {20 - wins} more battles to unlock Ancient of Days!</p>}
+              {wins >= 20 && <p className="mt-2 text-accent">🌟 Defeat Lucifer to unlock The Beast!</p>}
             </div>
             
             {/* Controls Info */}
@@ -952,6 +1002,8 @@ const ArcadeFighting = () => {
               }}
               arenaKey={selectedArena.id}
               onGameEnd={finishBattle}
+              playerSuperMove={player.superMove}
+              opponentSuperMove={opponent.superMove}
             />
 
             <div className="text-center">

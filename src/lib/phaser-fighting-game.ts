@@ -329,6 +329,8 @@ export class FightingGameScene extends Phaser.Scene {
   private playerConfig!: FighterConfig;
   private opponentConfig!: FighterConfig;
   private arenaKey!: string;
+  private boosterPickup?: Phaser.GameObjects.Sprite;
+  private boosterTimer?: Phaser.Time.TimerEvent;
 
   constructor() {
     super({ key: 'FightingGameScene' });
@@ -485,6 +487,102 @@ export class FightingGameScene extends Phaser.Scene {
       duration: 1000,
       onComplete: () => roundText.destroy()
     });
+
+    // Start booster spawn timer (every 10-15 seconds)
+    this.boosterTimer = this.time.addEvent({
+      delay: Phaser.Math.Between(10000, 15000),
+      callback: this.spawnBoosterPickup,
+      callbackScope: this,
+      loop: true
+    });
+  }
+
+  spawnBoosterPickup() {
+    if (this.boosterPickup || this.gameOver) return;
+
+    const x = Phaser.Math.Between(200, this.scale.width - 200);
+    const y = this.scale.height - 200;
+
+    // Create glowing booster pickup
+    const boosterGraphics = this.add.graphics();
+    const boosterType = Math.random() > 0.5 ? 'spirit' : 'armor';
+    const color = boosterType === 'spirit' ? 0x00ffff : 0xffd700;
+    
+    boosterGraphics.fillStyle(color, 0.8);
+    boosterGraphics.fillCircle(0, 0, 25);
+    boosterGraphics.lineStyle(4, 0xffffff);
+    boosterGraphics.strokeCircle(0, 0, 25);
+    boosterGraphics.generateTexture('booster-pickup', 50, 50);
+    boosterGraphics.destroy();
+
+    this.boosterPickup = this.add.sprite(x, y, 'booster-pickup');
+    this.physics.add.existing(this.boosterPickup);
+    (this.boosterPickup as any).boosterType = boosterType;
+
+    // Pulse animation
+    this.tweens.add({
+      targets: this.boosterPickup,
+      scale: 1.3,
+      alpha: 0.7,
+      duration: 800,
+      yoyo: true,
+      repeat: -1
+    });
+
+    // Float effect
+    this.tweens.add({
+      targets: this.boosterPickup,
+      y: y - 20,
+      duration: 1500,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+
+    // Add collision with fighters
+    this.physics.add.overlap(this.player, this.boosterPickup, this.collectBooster, undefined, this);
+    this.physics.add.overlap(this.opponent, this.boosterPickup, this.collectBooster, undefined, this);
+  }
+
+  collectBooster(fighter: any, booster: any) {
+    if (!this.boosterPickup) return;
+
+    const boosterType = (booster as any).boosterType;
+    const collectorName = fighter === this.player ? this.playerConfig.name : this.opponentConfig.name;
+
+    if (boosterType === 'spirit') {
+      fighter.engineChar.meter = Math.min(100, fighter.engineChar.meter + 50);
+      this.showBoosterText(`${collectorName} gained Spirit!`, fighter.x, fighter.y - 100, 0x00ffff);
+    } else {
+      fighter.engineChar.defense *= 1.5;
+      this.showBoosterText(`${collectorName} gained Armor!`, fighter.x, fighter.y - 100, 0xffd700);
+      
+      // Remove armor boost after 8 seconds
+      this.time.delayedCall(8000, () => {
+        fighter.engineChar.defense /= 1.5;
+      });
+    }
+
+    this.boosterPickup.destroy();
+    this.boosterPickup = undefined;
+  }
+
+  showBoosterText(message: string, x: number, y: number, color: number) {
+    const text = this.add.text(x, y, message, {
+      fontSize: '32px',
+      color: `#${color.toString(16).padStart(6, '0')}`,
+      fontStyle: 'bold',
+      stroke: '#000',
+      strokeThickness: 6
+    }).setOrigin(0.5);
+
+    this.tweens.add({
+      targets: text,
+      y: y - 50,
+      alpha: 0,
+      duration: 2000,
+      onComplete: () => text.destroy()
+    });
   }
 
   update(time: number, delta: number) {
@@ -570,6 +668,15 @@ export class FightingGameScene extends Phaser.Scene {
 
   endGame(playerWon: boolean) {
     this.gameOver = true;
+    
+    // Clean up booster timer
+    if (this.boosterTimer) {
+      this.boosterTimer.remove();
+    }
+    if (this.boosterPickup) {
+      this.boosterPickup.destroy();
+    }
+    
     const winText = this.add.text(
       this.scale.width / 2,
       this.scale.height / 2,
