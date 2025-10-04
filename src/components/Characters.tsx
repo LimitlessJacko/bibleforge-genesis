@@ -501,18 +501,17 @@ const Characters = () => {
       </section>
 
       <Dialog open={!!selectedCharacter} onOpenChange={(open) => !open && setSelectedCharacter(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto">
           {selectedCharacter && (
             <>
               {selectedCharacter.image && (
-                <div className="relative h-72 -mt-6 -mx-6 mb-4 overflow-hidden">
+                <div className="relative -mt-6 -mx-6 mb-6 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5">
                   <img 
                     src={selectedCharacter.image} 
                     alt={selectedCharacter.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-[600px] object-contain"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-card via-card/70 to-transparent"></div>
-                  <div className="absolute bottom-4 left-6 flex gap-2 flex-wrap">
+                  <div className="absolute top-4 right-6 flex gap-2 flex-wrap">
                     {selectedCharacter.unlockable && (
                       <Badge className="text-lg px-4 py-2 bg-accent/90 animate-pulse">
                         🔒 UNLOCKABLE
