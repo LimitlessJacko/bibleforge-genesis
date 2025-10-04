@@ -68,10 +68,10 @@ export const PhaserGame = ({ playerConfig, opponentConfig, arenaKey, onGameEnd, 
       />
       <div className="text-center space-y-2">
         <p className="text-sm text-muted-foreground">
-          <strong>Controls:</strong> Arrow Keys = Move • ↑ = Jump • J = Light Attack • K = Heavy Attack • L = Block
+          <strong>Basic Controls:</strong> Arrow Keys = Move • ↑ = Jump • J = Light Attack • K = Heavy Attack • L = Block
         </p>
         <p className="text-xs text-muted-foreground">
-          Special Moves: ↓→J (Hadouken) • →↓J (Shoryuken)
+          <strong>Advanced:</strong> U = Special Move (25 meter) • A = Super Move (100 meter) • Build meter by landing attacks!
         </p>
       </div>
     </div>

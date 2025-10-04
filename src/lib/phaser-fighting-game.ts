@@ -37,6 +37,10 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
   public hitboxActive = false;
   public inputBuffer: string[] = [];
   private lastInputTime = 0;
+  public superMoveName: string;
+  public canCancelInto = false;
+  public hitstunFrames = 0;
+  public blockstunFrames = 0;
   
   // Sakuga-style animation state machine
   public animState: AnimState = 'idle';
@@ -72,7 +76,8 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     x: number,
     y: number,
     config: FighterConfig,
-    isPlayer: boolean
+    isPlayer: boolean,
+    superMoveName: string = "Divine Strike"
   ) {
     super(scene, x, y, 'character');
     
@@ -80,16 +85,22 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     const color = config.alignment === 'Good' ? 0x4169e1 : 0xdc143c;
     const graphics = scene.add.graphics();
     
-    // Draw detailed character
+    // Draw detailed character with biblical styling
     graphics.fillStyle(color);
     graphics.fillRoundedRect(-30, -60, 60, 120, 10);
     graphics.fillStyle(0xffc9a3);
     graphics.fillCircle(0, -70, 25);
+    // Eyes
+    graphics.fillStyle(0x000000);
+    graphics.fillCircle(-8, -72, 3);
+    graphics.fillCircle(8, -72, 3);
+    // Arms and legs
     graphics.fillStyle(color);
     graphics.fillRoundedRect(-45, -40, 15, 60, 5);
     graphics.fillRoundedRect(30, -40, 15, 60, 5);
     graphics.fillRoundedRect(-25, 40, 20, 50, 5);
     graphics.fillRoundedRect(5, 40, 20, 50, 5);
+    // Highlight
     graphics.lineStyle(3, 0xffffff, 0.5);
     graphics.strokeRoundedRect(-30, -60, 60, 120, 10);
     
@@ -102,6 +113,7 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     
     this.fighterName = config.name;
     this.isPlayer = isPlayer;
+    this.superMoveName = superMoveName;
     
     this.engineChar = {
       ...fightingEngine.createCharacter({
@@ -211,30 +223,88 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
   }
 
   lightAttack() {
-    if (this.isAttacking || this.animState === 'hit') return;
+    if (this.hitstunFrames > 0 || this.blockstunFrames > 0) return;
+    if (this.isAttacking && !this.canCancelInto) return;
+    if (this.animState === 'hit') return;
     
     this.changeState('light_attack');
     this.isAttacking = true;
     this.attackCooldown = 20;
+    this.canCancelInto = false;
+    
+    // Add cancel window after 3 frames
+    this.scene.time.delayedCall(150, () => {
+      if (this.animState === 'light_attack') {
+        this.canCancelInto = true;
+      }
+    });
   }
 
   heavyAttack() {
-    if (this.isAttacking || this.animState === 'hit') return;
+    if (this.hitstunFrames > 0 || this.blockstunFrames > 0) return;
+    if (this.isAttacking && !this.canCancelInto) return;
+    if (this.animState === 'hit') return;
     
     this.changeState('heavy_attack');
     this.isAttacking = true;
     this.attackCooldown = 40;
+    this.canCancelInto = false;
   }
 
-  specialMove(type: string) {
-    if (this.engineChar.meter < 25 || this.isAttacking) return;
+  specialMove(type: string = 'projectile') {
+    if (this.engineChar.meter < 25 || this.hitstunFrames > 0) return;
+    if (this.isAttacking && !this.canCancelInto) return;
     
     this.engineChar.meter -= 25;
     this.changeState('special');
     this.isAttacking = true;
+    this.canCancelInto = false;
     
-    // Create projectile on active frame
-    this.scene.time.delayedCall(100, () => this.createProjectile());
+    // Create projectile or effect based on character
+    this.scene.time.delayedCall(100, () => {
+      if (type === 'projectile') {
+        this.createProjectile();
+      } else {
+        this.createAOEEffect();
+      }
+    });
+  }
+
+  superMove() {
+    if (this.engineChar.meter < 100) return;
+    
+    this.engineChar.meter = 0;
+    this.changeState('special');
+    this.isAttacking = true;
+    this.canCancelInto = false;
+    
+    // Create super effect
+    this.scene.time.delayedCall(100, () => {
+      this.createSuperEffect();
+    });
+    
+    // Show super move name
+    const superText = this.scene.add.text(
+      this.x,
+      this.y - 200,
+      this.superMoveName.toUpperCase(),
+      {
+        fontSize: '36px',
+        color: '#ffff00',
+        fontStyle: 'bold',
+        stroke: '#ff0000',
+        strokeThickness: 8
+      }
+    ).setOrigin(0.5);
+    
+    this.scene.tweens.add({
+      targets: superText,
+      scale: 1.5,
+      alpha: 0,
+      y: this.y - 250,
+      duration: 2000,
+      onComplete: () => superText.destroy()
+    });
   }
 
   createProjectile() {
@@ -247,7 +317,71 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     this.scene.physics.add.existing(projectile);
     const body = projectile.body as Phaser.Physics.Arcade.Body;
     body.setVelocityX(this.facing * 400);
+    
+    // Add projectile trail effect
+    this.scene.tweens.add({
+      targets: projectile,
+      alpha: 0.3,
+      scale: 0.5,
+      duration: 200,
+      yoyo: true,
+      repeat: -1
+    });
+    
     this.scene.time.delayedCall(2000, () => projectile.destroy());
+    (projectile as any).damage = 15;
+    (projectile as any).owner = this;
+  }
+
+  createAOEEffect() {
+    const aoe = this.scene.add.circle(
+      this.x,
+      this.y,
+      10,
+      0xffaa00,
+      0.6
+    );
+    
+    this.scene.tweens.add({
+      targets: aoe,
+      scale: 8,
+      alpha: 0,
+      duration: 500,
+      onComplete: () => aoe.destroy()
+    });
+    
+    (aoe as any).damage = 20;
+    (aoe as any).owner = this;
+  }
+
+  createSuperEffect() {
+    // Create multiple projectiles for super
+    for (let i = 0; i < 5; i++) {
+      this.scene.time.delayedCall(i * 100, () => {
+        const projectile = this.scene.add.circle(
+          this.x + (this.facing * 50),
+          this.y + (i * 10 - 20),
+          20,
+          0xffff00
+        );
+        this.scene.physics.add.existing(projectile);
+        const body = projectile.body as Phaser.Physics.Arcade.Body;
+        body.setVelocityX(this.facing * 500);
+        
+        this.scene.tweens.add({
+          targets: projectile,
+          scale: 1.5,
+          alpha: 0.5,
+          duration: 150,
+          yoyo: true,
+          repeat: -1
+        });
+        
+        this.scene.time.delayedCall(1500, () => projectile.destroy());
+        (projectile as any).damage = 30;
+        (projectile as any).owner = this;
+      });
+    }
   }
 
   block() {
@@ -266,23 +400,80 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
-  takeDamage(damage: number, knockback: number) {
+  takeDamage(damage: number, knockback: number, isBlocked: boolean = false) {
     const body = this.body as Phaser.Physics.Arcade.Body;
+    
+    if (isBlocked) {
+      // Reduced damage and different effects when blocked
+      damage *= 0.25;
+      this.blockstunFrames = 15;
+      this.setTint(0x8888ff);
+      this.scene.time.delayedCall(250, () => {
+        this.clearTint();
+        this.blockstunFrames = 0;
+      });
+      
+      // Show block effect
+      const blockEffect = this.scene.add.circle(this.x, this.y, 50, 0x0088ff, 0.5);
+      this.scene.tweens.add({
+        targets: blockEffect,
+        scale: 2,
+        alpha: 0,
+        duration: 300,
+        onComplete: () => blockEffect.destroy()
+      });
+    } else {
+      // Normal hit
+      this.hitstunFrames = Math.floor(damage * 2);
+      this.changeState('hit');
+      this.engineChar.state = 'hit_stun';
+      this.isAttacking = false;
+      this.canCancelInto = false;
+      
+      body.setVelocityX(knockback * -this.facing);
+      body.setVelocityY(-100);
+      
+      // Hit flash effect
+      this.setTint(0xffffff);
+      this.scene.time.delayedCall(50, () => this.setTint(0xff0000));
+      this.scene.time.delayedCall(100, () => this.clearTint());
+      
+      // Create hit spark
+      const hitSpark = this.scene.add.circle(this.x, this.y, 20, 0xff6600, 0.8);
+      this.scene.tweens.add({
+        targets: hitSpark,
+        scale: 2,
+        alpha: 0,
+        duration: 200,
+        onComplete: () => hitSpark.destroy()
+      });
+      
+      this.scene.time.delayedCall(400, () => {
+        this.hitstunFrames = 0;
+        if (this.engineChar.state === 'hit_stun') {
+          this.changeState('idle');
+          this.engineChar.state = 'idle';
+        }
+      });
+    }
+    
     this.engineChar.health = Math.max(0, this.engineChar.health - damage);
-    this.changeState('hit');
-    this.engineChar.state = 'hit_stun';
-    this.isAttacking = false;
     
-    body.setVelocityX(knockback * -this.facing);
-    body.setVelocityY(-100);
+    // Show damage number
+    const damageText = this.scene.add.text(this.x, this.y - 80, Math.floor(damage).toString(), {
+      fontSize: '32px',
+      color: isBlocked ? '#8888ff' : '#ff0000',
+      fontStyle: 'bold',
+      stroke: '#000',
+      strokeThickness: 4
+    }).setOrigin(0.5);
     
-    this.setTint(0xffffff);
-    this.scene.time.delayedCall(100, () => this.clearTint());
-    this.scene.time.delayedCall(400, () => {
-      if (this.engineChar.state === 'hit_stun') {
-        this.changeState('idle');
-        this.engineChar.state = 'idle';
-      }
+    this.scene.tweens.add({
+      targets: damageText,
+      y: this.y - 120,
+      alpha: 0,
+      duration: 800,
+      onComplete: () => damageText.destroy()
     });
   }
 
@@ -296,6 +487,14 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     
     if (this.attackCooldown > 0) {
       this.attackCooldown--;
+    }
+    
+    if (this.hitstunFrames > 0) {
+      this.hitstunFrames--;
+    }
+    
+    if (this.blockstunFrames > 0) {
+      this.blockstunFrames--;
     }
     
     if (body.touching.down) {
@@ -323,14 +522,20 @@ export class FightingGameScene extends Phaser.Scene {
     J: Phaser.Input.Keyboard.Key;
     K: Phaser.Input.Keyboard.Key;
     L: Phaser.Input.Keyboard.Key;
+    U: Phaser.Input.Keyboard.Key;
   };
   private gameOver = false;
   private onGameEnd?: (playerWon: boolean) => void;
   private playerConfig!: FighterConfig;
   private opponentConfig!: FighterConfig;
   private arenaKey!: string;
+  private playerSuperMove!: string;
+  private opponentSuperMove!: string;
   private boosterPickup?: Phaser.GameObjects.Sprite;
   private boosterTimer?: Phaser.Time.TimerEvent;
+  private projectiles: Phaser.GameObjects.GameObject[] = [];
+  private aiCooldown = 0;
+  private aiAggressiveness = 0.5;
 
   constructor() {
     super({ key: 'FightingGameScene' });
@@ -340,14 +545,20 @@ export class FightingGameScene extends Phaser.Scene {
     playerConfig: FighterConfig;
     opponentConfig: FighterConfig;
     arenaKey: string;
+    playerSuperMove?: string;
+    opponentSuperMove?: string;
     onGameEnd?: (playerWon: boolean) => void;
   }) {
     if (data.playerConfig && data.opponentConfig && data.arenaKey) {
       this.playerConfig = data.playerConfig;
       this.opponentConfig = data.opponentConfig;
       this.arenaKey = data.arenaKey;
+      this.playerSuperMove = data.playerSuperMove || "Divine Strike";
+      this.opponentSuperMove = data.opponentSuperMove || "Dark Punishment";
       this.onGameEnd = data.onGameEnd;
       this.gameOver = false;
+      this.projectiles = [];
+      this.aiCooldown = 0;
     }
   }
 
@@ -436,9 +647,9 @@ export class FightingGameScene extends Phaser.Scene {
     );
     this.physics.add.existing(ground, true);
 
-    // Create fighters
-    this.player = new FighterSprite(this, 200, 400, this.playerConfig, true);
-    this.opponent = new FighterSprite(this, this.scale.width - 200, 400, this.opponentConfig, false);
+    // Create fighters with super move names
+    this.player = new FighterSprite(this, 200, 400, this.playerConfig, true, this.playerSuperMove);
+    this.opponent = new FighterSprite(this, this.scale.width - 200, 400, this.opponentConfig, false, this.opponentSuperMove);
     this.opponent.facing = -1;
     this.opponent.setFlipX(true);
 
@@ -451,23 +662,36 @@ export class FightingGameScene extends Phaser.Scene {
       J: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.J),
       K: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.K),
       L: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.L),
+      U: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.U),
     };
 
     // Collisions
     this.physics.add.collider(this.player, ground);
     this.physics.add.collider(this.opponent, ground);
     this.physics.add.overlap(this.player.attackBox, this.opponent, () => {
-      if (this.player.hitboxActive && !this.opponent.isAttacking) {
-        this.opponent.takeDamage(10, 200);
-        this.player.engineChar.comboCount++;
-        this.player.comboText.setText(`${this.player.engineChar.comboCount} HIT COMBO!`);
-        this.player.comboText.setVisible(true);
+      if (this.player.hitboxActive && this.opponent.hitstunFrames === 0) {
+        const isBlocked = this.opponent.engineChar.state === 'blocking';
+        const damage = isBlocked ? 3 : 10;
+        this.opponent.takeDamage(damage, 200, isBlocked);
+        
+        if (!isBlocked) {
+          this.player.engineChar.comboCount++;
+          this.player.engineChar.meter = Math.min(100, this.player.engineChar.meter + 5);
+          this.player.comboText.setText(`${this.player.engineChar.comboCount} HIT COMBO!`);
+          this.player.comboText.setVisible(true);
+        }
       }
     });
     this.physics.add.overlap(this.opponent.attackBox, this.player, () => {
-      if (this.opponent.hitboxActive && !this.player.isAttacking) {
-        this.player.takeDamage(10, 200);
-        this.opponent.engineChar.comboCount++;
+      if (this.opponent.hitboxActive && this.player.hitstunFrames === 0) {
+        const isBlocked = this.player.engineChar.state === 'blocking';
+        const damage = isBlocked ? 3 : 10;
+        this.player.takeDamage(damage, 200, isBlocked);
+        
+        if (!isBlocked) {
+          this.opponent.engineChar.comboCount++;
+          this.opponent.engineChar.meter = Math.min(100, this.opponent.engineChar.meter + 5);
+        }
       }
     });
 
@@ -627,28 +851,45 @@ export class FightingGameScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.keys.K)) {
       this.player.heavyAttack();
     }
+    if (Phaser.Input.Keyboard.JustDown(this.keys.U)) {
+      if (this.player.engineChar.meter >= 50) {
+        this.player.specialMove('projectile');
+      }
+    }
+    if (Phaser.Input.Keyboard.JustDown(this.keys.A)) {
+      if (this.player.engineChar.meter >= 100) {
+        this.player.superMove();
+      }
+    }
     if (this.keys.L.isDown) {
       this.player.block();
     } else {
       this.player.stopBlock();
     }
 
-    // Simple AI
-    const distance = Math.abs(this.player.x - this.opponent.x);
-    const opponentBody = this.opponent.body as Phaser.Physics.Arcade.Body;
+    // Enhanced AI
+    this.updateAI(delta);
     
-    if (distance > 100) {
-      if (this.opponent.x < this.player.x) {
-        opponentBody.setVelocityX(150);
-      } else {
-        opponentBody.setVelocityX(-150);
+    // Handle projectile collisions
+    this.projectiles = this.projectiles.filter(proj => {
+      if (!proj || !(proj as any).active) return false;
+      
+      const owner = (proj as any).owner;
+      const target = owner === this.player ? this.opponent : this.player;
+      
+      if (Phaser.Geom.Intersects.RectangleToRectangle(
+        (proj as any).getBounds(),
+        target.getBounds()
+      )) {
+        const damage = (proj as any).damage || 15;
+        const isBlocked = target.engineChar.state === 'blocking';
+        target.takeDamage(damage, 150, isBlocked);
+        proj.destroy();
+        return false;
       }
-    } else {
-      opponentBody.setVelocityX(0);
-      if (Math.random() < 0.02) {
-        this.opponent.lightAttack();
-      }
-    }
+      
+      return true;
+    });
 
     // Update fighters with delta time for smooth animations
     this.player.update(delta);
@@ -666,16 +907,96 @@ export class FightingGameScene extends Phaser.Scene {
     }
   }
 
+  updateAI(delta: number) {
+    if (this.aiCooldown > 0) {
+      this.aiCooldown -= delta;
+      return;
+    }
+    
+    const distance = Math.abs(this.player.x - this.opponent.x);
+    const opponentBody = this.opponent.body as Phaser.Physics.Arcade.Body;
+    const healthPercent = this.opponent.engineChar.health / 100;
+    
+    // AI becomes more aggressive when low on health
+    this.aiAggressiveness = 0.3 + (1 - healthPercent) * 0.5;
+    
+    if (!this.opponent.isAttacking && this.opponent.hitstunFrames === 0) {
+      // Movement AI
+      if (distance > 150) {
+        // Approach player
+        if (this.opponent.x < this.player.x) {
+          opponentBody.setVelocityX(180);
+          this.opponent.facing = 1;
+          this.opponent.setFlipX(false);
+        } else {
+          opponentBody.setVelocityX(-180);
+          this.opponent.facing = -1;
+          this.opponent.setFlipX(true);
+        }
+      } else if (distance < 80) {
+        // Too close, back off or attack
+        if (Math.random() < this.aiAggressiveness) {
+          this.performAIAttack();
+        } else {
+          if (this.opponent.x < this.player.x) {
+            opponentBody.setVelocityX(-120);
+          } else {
+            opponentBody.setVelocityX(120);
+          }
+        }
+      } else {
+        // Attack range
+        opponentBody.setVelocityX(0);
+        if (Math.random() < this.aiAggressiveness * 0.6) {
+          this.performAIAttack();
+        }
+      }
+      
+      // Block if player is attacking nearby
+      if (this.player.isAttacking && distance < 120 && Math.random() < 0.7) {
+        this.opponent.block();
+        this.time.delayedCall(300, () => {
+          this.opponent.stopBlock();
+        });
+      }
+    }
+  }
+
+  performAIAttack() {
+    const meter = this.opponent.engineChar.meter;
+    const rand = Math.random();
+    
+    if (meter >= 100 && rand < 0.15) {
+      // Super move
+      this.opponent.superMove();
+      this.aiCooldown = 2000;
+    } else if (meter >= 50 && rand < 0.25) {
+      // Special move
+      this.opponent.specialMove('projectile');
+      this.aiCooldown = 1500;
+    } else if (rand < 0.6) {
+      // Light attack
+      this.opponent.lightAttack();
+      this.aiCooldown = 600;
+    } else {
+      // Heavy attack
+      this.opponent.heavyAttack();
+      this.aiCooldown = 1000;
+    }
+  }
+
   endGame(playerWon: boolean) {
     this.gameOver = true;
     
-    // Clean up booster timer
+    // Clean up
     if (this.boosterTimer) {
       this.boosterTimer.remove();
     }
     if (this.boosterPickup) {
       this.boosterPickup.destroy();
     }
+    this.projectiles.forEach(proj => proj.destroy());
+    this.projectiles = [];
     
     const winText = this.add.text(
       this.scale.width / 2,
@@ -689,6 +1010,15 @@ export class FightingGameScene extends Phaser.Scene {
         strokeThickness: 10
       }
     ).setOrigin(0.5);
+    
+    // Victory animation
+    this.tweens.add({
+      targets: winText,
+      scale: 1.2,
+      duration: 500,
+      yoyo: true,
+      repeat: 2
+    });
 
     this.time.delayedCall(2000, () => {
       if (this.onGameEnd) {
