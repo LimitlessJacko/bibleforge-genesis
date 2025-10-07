@@ -27,7 +27,7 @@ const Hero = () => {
         </div>
         
         <h1 className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-secondary via-primary to-accent bg-clip-text text-transparent">
-          Spiritual Warfare
+          The Spiritual Warfare
         </h1>
         
         <p className="text-xl md:text-2xl text-muted-foreground mb-4 max-w-3xl mx-auto">
