@@ -10,6 +10,7 @@ import BiblicalChess from "./pages/BiblicalChess";
 import ScriptureTrivia from "./pages/ScriptureTrivia";
 import Ludi from "./pages/Ludi";
 import Auth from "./pages/Auth";
+import JamaicanDominoes from "./pages/JamaicanDominoes";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/biblical-chess" element={<BiblicalChess />} />
           <Route path="/scripture-trivia" element={<ScriptureTrivia />} />
           <Route path="/ludi" element={<Ludi />} />
+          <Route path="/jamaican-dominoes" element={<JamaicanDominoes />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

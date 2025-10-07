@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Swords, Crown, BookOpen } from "lucide-react";
+import { Swords, Crown, BookOpen, Dices } from "lucide-react";
 import chessMode from "@/assets/chess-mode.png";
 
 const gameModes = [
@@ -72,6 +72,24 @@ const gameModes = [
       },
       gameplay: "Answer scripture-based questions under time pressure. Build streaks for bonus points and earn chances at rare Limitless Boots drops."
     }
+  },
+  {
+    id: "dominoes",
+    icon: Dices,
+    title: "Jamaican Dominoes",
+    description: "Classic Caribbean domino game with team play",
+    features: [
+      "2 or 4 player matches",
+      "Team-based gameplay (2v2)",
+      "Traditional domino matching rules",
+      "Strategic tile placement"
+    ],
+    color: "from-accent to-primary",
+    details: {
+      players: "2-4 players",
+      teams: "1v1 or 2v2 team play",
+      gameplay: "Match domino ends to play tiles. First player to empty their hand wins the round. Play with partners in 4-player mode for authentic Jamaican dominoes experience."
+    }
   }
 ];
 
@@ -83,7 +101,8 @@ const GameModes = () => {
     const routes: Record<string, string> = {
       "arcade": "/arcade-fighting",
       "chess": "/biblical-chess",
-      "trivia": "/scripture-trivia"
+      "trivia": "/scripture-trivia",
+      "dominoes": "/jamaican-dominoes"
     };
     navigate(routes[modeId]);
   };
@@ -97,11 +116,11 @@ const GameModes = () => {
               Game Modes
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Three unique ways to experience Biblical warfare and test your skills
+              Four unique ways to experience Biblical warfare and test your skills
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-8">
             {gameModes.map((mode) => {
               const Icon = mode.icon;
               return (
@@ -229,6 +248,22 @@ const GameModes = () => {
                       <div className="p-3 bg-background/50 rounded-lg border border-border/50">
                         <div className="text-sm text-muted-foreground mb-1">Win Conditions</div>
                         <div className="font-semibold text-foreground">{selectedMode.details.winConditions.join(", ")}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {selectedMode.id === "dominoes" && (
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-3">Game Details</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 bg-background/50 rounded-lg border border-border/50">
+                        <div className="text-sm text-muted-foreground mb-1">Players</div>
+                        <div className="font-semibold text-foreground">{selectedMode.details.players}</div>
+                      </div>
+                      <div className="p-3 bg-background/50 rounded-lg border border-border/50">
+                        <div className="text-sm text-muted-foreground mb-1">Teams</div>
+                        <div className="font-semibold text-foreground">{selectedMode.details.teams}</div>
                       </div>
                     </div>
                   </div>
