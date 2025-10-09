@@ -463,35 +463,40 @@ const JamaicanDominoes = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold">Your Hand</h3>
-              {currentPlayerData.id === 0 && selectedDomino && (
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => playDomino(selectedDomino, "left")}
-                    disabled={gameState.board.length > 0 && !canPlayDomino(
-                      humanPlayer.hand.find(d => d.id === selectedDomino)!,
-                      gameState.leftEnd,
-                      gameState.rightEnd
-                    ).canPlay}
-                  >
-                    Play Left
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => playDomino(selectedDomino, "right")}
-                    disabled={gameState.board.length > 0 && !canPlayDomino(
-                      humanPlayer.hand.find(d => d.id === selectedDomino)!,
-                      gameState.leftEnd,
-                      gameState.rightEnd
-                    ).canPlay}
-                  >
-                    Play Right
-                  </Button>
-                  <Button variant="ghost" onClick={handlePass}>
-                    Pass
-                  </Button>
-                </div>
-              )}
+              {currentPlayerData.id === 0 && selectedDomino && (() => {
+                const selectedDominoData = humanPlayer.hand.find(d => d.id === selectedDomino);
+                if (!selectedDominoData) return null;
+                
+                return (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => playDomino(selectedDomino, "left")}
+                      disabled={gameState.board.length > 0 && !canPlayDomino(
+                        selectedDominoData,
+                        gameState.leftEnd,
+                        gameState.rightEnd
+                      ).canPlay}
+                    >
+                      Play Left
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => playDomino(selectedDomino, "right")}
+                      disabled={gameState.board.length > 0 && !canPlayDomino(
+                        selectedDominoData,
+                        gameState.leftEnd,
+                        gameState.rightEnd
+                      ).canPlay}
+                    >
+                      Play Right
+                    </Button>
+                    <Button variant="ghost" onClick={handlePass}>
+                      Pass
+                    </Button>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="flex flex-wrap gap-3 justify-center">
