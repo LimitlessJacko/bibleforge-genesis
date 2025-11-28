@@ -14,6 +14,14 @@ export interface FighterConfig {
   portraitColor?: number;
 }
 
+export interface AssistConfig {
+  name: string;
+  attack: number;
+  alignment: 'Good' | 'Evil';
+  assistType: 'projectile' | 'rush' | 'anti-air';
+  assistMove: string;
+}
+
 type AnimState = 'idle' | 'walk' | 'jump' | 'air_dash' | 'land' | 'light_attack' | 'heavy_attack' | 'launcher' | 'air_combo' | 'special' | 'super' | 'block' | 'hit' | 'crouch' | 'ground_bounce' | 'wall_bounce';
 
 interface AnimationFrame {
@@ -841,6 +849,7 @@ export class FightingGameScene extends Phaser.Scene {
     L: Phaser.Input.Keyboard.Key;
     U: Phaser.Input.Keyboard.Key;
     I: Phaser.Input.Keyboard.Key;
+    E: Phaser.Input.Keyboard.Key; // Assist call
   };
   private gameOver = false;
   private onGameEnd?: (playerWon: boolean) => void;
@@ -856,6 +865,14 @@ export class FightingGameScene extends Phaser.Scene {
   private aiAggressiveness = 0.6;
   private comboResetTimer = 0;
   
+  // Assist system
+  private playerAssist?: AssistConfig;
+  private opponentAssist?: AssistConfig;
+  private playerAssistCooldown = 0;
+  private opponentAssistCooldown = 0;
+  private assistCooldownMax = 8000; // 8 seconds
+  private assistIndicator?: Phaser.GameObjects.Graphics;
+  
   // Parallax layers
   private bgLayers: Phaser.GameObjects.TileSprite[] = [];
 
@@ -869,6 +886,8 @@ export class FightingGameScene extends Phaser.Scene {
     arenaKey: string;
     playerSuperMove?: string;
     opponentSuperMove?: string;
+    playerAssist?: AssistConfig;
+    opponentAssist?: AssistConfig;
     onGameEnd?: (playerWon: boolean) => void;
   }) {
     if (data.playerConfig && data.opponentConfig && data.arenaKey) {
@@ -877,9 +896,13 @@ export class FightingGameScene extends Phaser.Scene {
       this.arenaKey = data.arenaKey;
       this.playerSuperMove = data.playerSuperMove || "Divine Strike";
       this.opponentSuperMove = data.opponentSuperMove || "Dark Punishment";
+      this.playerAssist = data.playerAssist;
+      this.opponentAssist = data.opponentAssist;
       this.onGameEnd = data.onGameEnd;
       this.gameOver = false;
       this.projectiles = [];
+      this.playerAssistCooldown = 0;
+      this.opponentAssistCooldown = 0;
       this.aiCooldown = 0;
     }
   }
@@ -915,6 +938,7 @@ export class FightingGameScene extends Phaser.Scene {
       L: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.L),
       U: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.U),
       I: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.I),
+      E: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E), // Assist
     };
 
     // Physics collisions
@@ -1306,6 +1330,19 @@ export class FightingGameScene extends Phaser.Scene {
     } else {
       this.player.stopBlock();
     }
+    
+    // Assist call
+    if (Phaser.Input.Keyboard.JustDown(this.keys.E)) {
+      this.callAssist(true);
+    }
+    
+    // Update assist cooldowns
+    if (this.playerAssistCooldown > 0) {
+      this.playerAssistCooldown -= delta;
+    }
+    if (this.opponentAssistCooldown > 0) {
+      this.opponentAssistCooldown -= delta;
+    }
 
     // AI
     this.updateAI(delta);
@@ -1319,6 +1356,9 @@ export class FightingGameScene extends Phaser.Scene {
     this.player.updateMeterBar(130, 72, 320);
     this.opponent.updateHealthBar(this.scale.width - 450, 45, 320);
     this.opponent.updateMeterBar(this.scale.width - 450, 72, 320);
+    
+    // Update assist cooldown indicators
+    this.updateAssistIndicators();
 
     // Win condition
     if (this.player.engineChar.health <= 0 || this.opponent.engineChar.health <= 0) {
@@ -1373,6 +1413,13 @@ export class FightingGameScene extends Phaser.Scene {
     const meter = this.opponent.engineChar.meter;
     const rand = Math.random();
     
+    // AI can call assist
+    if (this.opponentAssist && this.opponentAssistCooldown <= 0 && rand < 0.15) {
+      this.callAssist(false);
+      this.aiCooldown = 1500;
+      return;
+    }
+    
     if (meter >= 100 && rand < 0.12) {
       this.opponent.superMove();
       this.aiCooldown = 2500;
@@ -1388,6 +1435,229 @@ export class FightingGameScene extends Phaser.Scene {
     } else {
       this.opponent.heavyAttack();
       this.aiCooldown = 900;
+    }
+  }
+
+  callAssist(isPlayer: boolean) {
+    const assist = isPlayer ? this.playerAssist : this.opponentAssist;
+    const cooldown = isPlayer ? this.playerAssistCooldown : this.opponentAssistCooldown;
+    const fighter = isPlayer ? this.player : this.opponent;
+    const target = isPlayer ? this.opponent : this.player;
+    
+    if (!assist || cooldown > 0) return;
+    
+    // Set cooldown
+    if (isPlayer) {
+      this.playerAssistCooldown = this.assistCooldownMax;
+    } else {
+      this.opponentAssistCooldown = this.assistCooldownMax;
+    }
+    
+    // Create assist character appearance
+    const assistColor = assist.alignment === 'Good' ? 0x3388ff : 0xff3333;
+    const startX = isPlayer ? -100 : this.scale.width + 100;
+    const targetX = fighter.x + (fighter.facing * 80);
+    
+    // Assist character graphic
+    const assistSprite = this.add.graphics();
+    assistSprite.fillStyle(assistColor, 0.9);
+    assistSprite.fillRoundedRect(-30, -60, 60, 120, 10);
+    assistSprite.fillStyle(0xffcc99);
+    assistSprite.fillCircle(0, -70, 22);
+    assistSprite.lineStyle(3, 0xffffff, 0.6);
+    assistSprite.strokeRoundedRect(-30, -60, 60, 120, 10);
+    assistSprite.setPosition(startX, this.scale.height - 180);
+    
+    // Announce assist
+    const assistText = this.add.text(
+      this.scale.width / 2,
+      200,
+      `${assist.name.toUpperCase()} ASSIST!`,
+      {
+        fontSize: '48px',
+        color: `#${assistColor.toString(16).padStart(6, '0')}`,
+        fontFamily: 'Impact, sans-serif',
+        stroke: '#000',
+        strokeThickness: 8
+      }
+    ).setOrigin(0.5);
+    
+    this.tweens.add({
+      targets: assistText,
+      alpha: 0,
+      y: 150,
+      duration: 1000,
+      onComplete: () => assistText.destroy()
+    });
+    
+    // Assist entry animation
+    this.tweens.add({
+      targets: assistSprite,
+      x: targetX,
+      duration: 300,
+      ease: 'Power2',
+      onComplete: () => {
+        // Perform assist attack based on type
+        this.performAssistAttack(assist, assistSprite, target, isPlayer);
+      }
+    });
+  }
+
+  performAssistAttack(assist: AssistConfig, assistSprite: Phaser.GameObjects.Graphics, target: FighterSprite, isPlayer: boolean) {
+    const facing = isPlayer ? this.player.facing : this.opponent.facing;
+    const attackColor = assist.alignment === 'Good' ? 0x00ffff : 0xff6600;
+    
+    // Flash effect
+    assistSprite.setAlpha(1.2);
+    this.time.delayedCall(100, () => assistSprite.setAlpha(0.9));
+    
+    switch (assist.assistType) {
+      case 'projectile':
+        // Fire multiple projectiles
+        for (let i = 0; i < 3; i++) {
+          this.time.delayedCall(i * 100, () => {
+            const proj = this.add.circle(
+              assistSprite.x + (facing * 50),
+              assistSprite.y - 20 + (i * 20),
+              18,
+              attackColor
+            );
+            this.physics.add.existing(proj);
+            const body = proj.body as Phaser.Physics.Arcade.Body;
+            body.setVelocityX(facing * 500);
+            
+            this.tweens.add({
+              targets: proj,
+              scale: 0.7,
+              alpha: 0.6,
+              duration: 100,
+              yoyo: true,
+              repeat: -1
+            });
+            
+            // Collision check
+            this.physics.add.overlap(proj, target, () => {
+              const damage = assist.attack * 0.08;
+              target.takeDamage(damage, 150, target.engineChar.state === 'blocking');
+              proj.destroy();
+            });
+            
+            this.time.delayedCall(1500, () => proj.destroy());
+          });
+        }
+        break;
+        
+      case 'rush':
+        // Rush attack - dash through
+        this.tweens.add({
+          targets: assistSprite,
+          x: assistSprite.x + (facing * 300),
+          duration: 400,
+          onUpdate: () => {
+            // Check collision during rush
+            if (Math.abs(assistSprite.x - target.x) < 60 && Math.abs(assistSprite.y - target.y) < 80) {
+              const damage = assist.attack * 0.12;
+              target.takeDamage(damage, 200, target.engineChar.state === 'blocking');
+            }
+          }
+        });
+        
+        // Rush trail effect
+        for (let i = 0; i < 5; i++) {
+          this.time.delayedCall(i * 60, () => {
+            const trail = this.add.circle(assistSprite.x, assistSprite.y, 20, attackColor, 0.5);
+            this.tweens.add({
+              targets: trail,
+              alpha: 0,
+              scale: 0.3,
+              duration: 200,
+              onComplete: () => trail.destroy()
+            });
+          });
+        }
+        break;
+        
+      case 'anti-air':
+        // Rising attack
+        const aaEffect = this.add.circle(assistSprite.x, assistSprite.y, 30, attackColor, 0.8);
+        
+        this.tweens.add({
+          targets: [assistSprite, aaEffect],
+          y: assistSprite.y - 200,
+          duration: 400,
+          ease: 'Power2',
+          onUpdate: () => {
+            if (Math.abs(assistSprite.x - target.x) < 80 && assistSprite.y < target.y + 50) {
+              const damage = assist.attack * 0.1;
+              target.takeDamage(damage, 100, target.engineChar.state === 'blocking', true);
+            }
+          }
+        });
+        
+        this.tweens.add({
+          targets: aaEffect,
+          scale: 3,
+          alpha: 0,
+          duration: 500,
+          onComplete: () => aaEffect.destroy()
+        });
+        break;
+    }
+    
+    // Assist exit animation
+    this.time.delayedCall(800, () => {
+      this.tweens.add({
+        targets: assistSprite,
+        x: isPlayer ? -100 : this.scale.width + 100,
+        alpha: 0,
+        duration: 300,
+        onComplete: () => assistSprite.destroy()
+      });
+    });
+  }
+
+  updateAssistIndicators() {
+    // Create or update assist cooldown display
+    if (!this.assistIndicator) {
+      this.assistIndicator = this.add.graphics();
+    }
+    
+    this.assistIndicator.clear();
+    
+    // Player assist indicator (bottom left)
+    if (this.playerAssist) {
+      const cooldownPercent = Math.max(0, 1 - (this.playerAssistCooldown / this.assistCooldownMax));
+      const indicatorX = 60;
+      const indicatorY = this.scale.height - 30;
+      
+      // Background
+      this.assistIndicator.fillStyle(0x222222, 0.8);
+      this.assistIndicator.fillRoundedRect(indicatorX - 50, indicatorY - 12, 100, 24, 6);
+      
+      // Cooldown fill
+      const fillColor = cooldownPercent >= 1 ? 0x00ff00 : 0x888888;
+      this.assistIndicator.fillStyle(fillColor);
+      this.assistIndicator.fillRoundedRect(indicatorX - 48, indicatorY - 10, 96 * cooldownPercent, 20, 4);
+      
+      // Ready flash
+      if (cooldownPercent >= 1) {
+        this.assistIndicator.lineStyle(2, 0x00ff00, 0.8);
+        this.assistIndicator.strokeRoundedRect(indicatorX - 50, indicatorY - 12, 100, 24, 6);
+      }
+    }
+    
+    // Opponent assist indicator (bottom right) 
+    if (this.opponentAssist) {
+      const cooldownPercent = Math.max(0, 1 - (this.opponentAssistCooldown / this.assistCooldownMax));
+      const indicatorX = this.scale.width - 60;
+      const indicatorY = this.scale.height - 30;
+      
+      this.assistIndicator.fillStyle(0x222222, 0.8);
+      this.assistIndicator.fillRoundedRect(indicatorX - 50, indicatorY - 12, 100, 24, 6);
+      
+      const fillColor = cooldownPercent >= 1 ? 0xff6600 : 0x888888;
+      this.assistIndicator.fillStyle(fillColor);
+      this.assistIndicator.fillRoundedRect(indicatorX - 48, indicatorY - 10, 96 * cooldownPercent, 20, 4);
     }
   }
 

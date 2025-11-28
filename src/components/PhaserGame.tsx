@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
-import { FightingGameScene, type FighterConfig } from '@/lib/phaser-fighting-game';
+import { FightingGameScene, type FighterConfig, type AssistConfig } from '@/lib/phaser-fighting-game';
 
 interface PhaserGameProps {
   playerConfig: FighterConfig;
@@ -9,9 +9,20 @@ interface PhaserGameProps {
   onGameEnd: (playerWon: boolean) => void;
   playerSuperMove?: string;
   opponentSuperMove?: string;
+  playerAssist?: AssistConfig;
+  opponentAssist?: AssistConfig;
 }
 
-export const PhaserGame = ({ playerConfig, opponentConfig, arenaKey, onGameEnd, playerSuperMove, opponentSuperMove }: PhaserGameProps) => {
+export const PhaserGame = ({ 
+  playerConfig, 
+  opponentConfig, 
+  arenaKey, 
+  onGameEnd, 
+  playerSuperMove, 
+  opponentSuperMove,
+  playerAssist,
+  opponentAssist
+}: PhaserGameProps) => {
   const gameRef = useRef<Phaser.Game | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -45,7 +56,9 @@ export const PhaserGame = ({ playerConfig, opponentConfig, arenaKey, onGameEnd, 
           opponentConfig,
           arenaKey,
           playerSuperMove,
-          opponentSuperMove
+          opponentSuperMove,
+          playerAssist,
+          opponentAssist
         });
         (scene as any).onGameEnd = onGameEnd;
       }
@@ -57,7 +70,7 @@ export const PhaserGame = ({ playerConfig, opponentConfig, arenaKey, onGameEnd, 
         gameRef.current = null;
       }
     };
-  }, [playerConfig, opponentConfig, arenaKey, onGameEnd]);
+  }, [playerConfig, opponentConfig, arenaKey, onGameEnd, playerAssist, opponentAssist]);
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -75,7 +88,7 @@ export const PhaserGame = ({ playerConfig, opponentConfig, arenaKey, onGameEnd, 
           <strong>Attacks:</strong> J = Light • K = Heavy • I = Launcher • L = Block
         </p>
         <p className="text-xs text-accent">
-          <strong>Specials:</strong> U = Special Move (25 meter) • A = HYPER COMBO (100 meter)
+          <strong>Specials:</strong> U = Special Move • A = HYPER COMBO • <span className="text-green-400 font-bold">E = ASSIST</span>
         </p>
       </div>
     </div>
