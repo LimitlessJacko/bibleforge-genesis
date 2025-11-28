@@ -12,6 +12,7 @@ export interface FighterConfig {
   spriteKey: string;
   alignment: 'Good' | 'Evil';
   portraitColor?: number;
+  imageUrl?: string; // URL to character image
 }
 
 export interface AssistConfig {
@@ -60,7 +61,7 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
   public isWallBouncing = false;
   public airActionsRemaining = 2;
   public portraitColor: number;
-  private characterGraphics: Phaser.GameObjects.Graphics;
+  private characterGraphics?: Phaser.GameObjects.Graphics;
   
   public animState: AnimState = 'idle';
   public animFrame = 0;
@@ -116,18 +117,26 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     isPlayer: boolean,
     superMoveName: string = "Divine Strike"
   ) {
-    super(scene, x, y, 'character');
+    // Use the preloaded character texture if available, otherwise fallback to generated
+    const textureKey = 'fighter-' + config.name.replace(/\s+/g, '-').toLowerCase();
+    const hasTexture = scene.textures.exists(textureKey);
+    
+    super(scene, x, y, hasTexture ? textureKey : 'character');
     
     this.portraitColor = config.portraitColor || (config.alignment === 'Good' ? 0x3388ff : 0xff3333);
     
-    // Create MvC-style character with dynamic pose
-    this.characterGraphics = scene.add.graphics();
-    this.drawCharacter(config.alignment);
+    // Only generate fallback texture if character image wasn't loaded
+    if (!hasTexture) {
+      this.characterGraphics = scene.add.graphics();
+      this.drawCharacter(config.alignment);
+      this.characterGraphics.generateTexture('character-' + config.name, 120, 180);
+      this.characterGraphics.destroy();
+      this.setTexture('character-' + config.name);
+    } else {
+      // Scale and adjust the actual character image
+      this.setDisplaySize(200, 280); // MvC-style larger sprites
+    }
     
-    this.characterGraphics.generateTexture('character-' + config.name, 120, 180);
-    this.characterGraphics.destroy();
-    
-    this.setTexture('character-' + config.name);
     scene.add.existing(this);
     scene.physics.add.existing(this);
     
@@ -150,17 +159,18 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     body.setCollideWorldBounds(true);
     body.setDragX(800);
     body.setMaxVelocity(600, 1200);
-    body.setSize(70, 140);
-    this.setScale(1.1);
+    body.setSize(80, 200); // Adjusted hitbox for larger sprites
+    body.setOffset(60, 40); // Center the hitbox
+    this.setOrigin(0.5, 0.5);
 
-    this.attackBox = scene.add.rectangle(x, y, 100, 120, 0xff0000, 0);
+    this.attackBox = scene.add.rectangle(x, y, 120, 180, 0xff0000, 0);
     scene.physics.add.existing(this.attackBox);
 
     this.healthBar = scene.add.graphics();
     this.meterBar = scene.add.graphics();
     
     // MvC-style combo counter
-    this.comboText = scene.add.text(x, y - 180, '', {
+    this.comboText = scene.add.text(x, y - 200, '', {
       fontSize: '64px',
       color: '#ffcc00',
       fontFamily: 'Impact, sans-serif',
@@ -169,7 +179,7 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     }).setOrigin(0.5);
     
     // Damage display
-    this.damageText = scene.add.text(x, y - 120, '', {
+    this.damageText = scene.add.text(x, y - 150, '', {
       fontSize: '32px',
       color: '#ff6600',
       fontFamily: 'Arial Black, sans-serif',
@@ -311,17 +321,15 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
       body.setVelocityX(this.facing * currentFrame.moveSpeed);
     }
 
-    // Visual effects based on state
+    // Visual effects based on state - use tint only, don't change scale for actual images
     if (currentFrame.hitboxActive) {
       this.setTint(0xffaa00);
-      this.setScale(1.15);
     } else if (currentFrame.invincible) {
       this.setAlpha(0.7);
       this.setTint(0x00ffff);
     } else {
       this.clearTint();
       this.setAlpha(1);
-      this.setScale(1.1);
     }
 
     if (this.animFrameTimer >= currentFrame.duration) {
@@ -1114,11 +1122,67 @@ export class FightingGameScene extends Phaser.Scene {
     }
   }
 
-  preload() {}
+  preload() {
+    // Note: Images are loaded dynamically in create() because 
+    // the config is set in init() which runs after preload()
+  }
 
   create() {
     if (!this.playerConfig || !this.opponentConfig) return;
     
+    // Load character images dynamically
+    const imagesToLoad: { key: string; url: string }[] = [];
+    
+    if (this.playerConfig.imageUrl) {
+      const playerKey = 'fighter-' + this.playerConfig.name.replace(/\s+/g, '-').toLowerCase();
+      if (!this.textures.exists(playerKey)) {
+        imagesToLoad.push({ key: playerKey, url: this.playerConfig.imageUrl });
+      }
+    }
+    if (this.opponentConfig.imageUrl) {
+      const opponentKey = 'fighter-' + this.opponentConfig.name.replace(/\s+/g, '-').toLowerCase();
+      if (!this.textures.exists(opponentKey)) {
+        imagesToLoad.push({ key: opponentKey, url: this.opponentConfig.imageUrl });
+      }
+    }
+    if (this.playerAssist && (this.playerAssist as any).imageUrl) {
+      const assistKey = 'fighter-' + this.playerAssist.name.replace(/\s+/g, '-').toLowerCase();
+      if (!this.textures.exists(assistKey)) {
+        imagesToLoad.push({ key: assistKey, url: (this.playerAssist as any).imageUrl });
+      }
+    }
+    if (this.opponentAssist && (this.opponentAssist as any).imageUrl) {
+      const assistKey = 'fighter-' + this.opponentAssist.name.replace(/\s+/g, '-').toLowerCase();
+      if (!this.textures.exists(assistKey)) {
+        imagesToLoad.push({ key: assistKey, url: (this.opponentAssist as any).imageUrl });
+      }
+    }
+    
+    if (imagesToLoad.length > 0) {
+      // Show loading text
+      const loadingText = this.add.text(this.scale.width / 2, this.scale.height / 2, 'Loading fighters...', {
+        fontSize: '32px',
+        color: '#ffffff',
+        fontFamily: 'Impact, sans-serif'
+      }).setOrigin(0.5);
+      
+      // Load images dynamically
+      imagesToLoad.forEach(img => {
+        this.load.image(img.key, img.url);
+      });
+      
+      this.load.once('complete', () => {
+        loadingText.destroy();
+        this.setupGame();
+      });
+      
+      this.load.start();
+    } else {
+      this.setupGame();
+    }
+  }
+  
+  private setupGame() {
     // MvC-style parallax background
     this.createParallaxBackground();
     
@@ -1129,8 +1193,8 @@ export class FightingGameScene extends Phaser.Scene {
     this.createStage();
     
     // Create fighters
-    this.player = new FighterSprite(this, 250, 400, this.playerConfig, true, this.playerSuperMove);
-    this.opponent = new FighterSprite(this, this.scale.width - 250, 400, this.opponentConfig, false, this.opponentSuperMove);
+    this.player = new FighterSprite(this, 250, 420, this.playerConfig, true, this.playerSuperMove);
+    this.opponent = new FighterSprite(this, this.scale.width - 250, 420, this.opponentConfig, false, this.opponentSuperMove);
     this.opponent.facing = -1;
     this.opponent.setFlipX(true);
 
@@ -1264,14 +1328,28 @@ export class FightingGameScene extends Phaser.Scene {
     // Inner ring
     const innerRing = this.add.circle(x, y, 35, 0x000000, 0.3);
     
-    // Character initial
-    this.add.text(x, y, config.name.charAt(0).toUpperCase(), {
-      fontSize: '32px',
-      color: '#ffffff',
-      fontFamily: 'Impact, sans-serif',
-      stroke: '#000',
-      strokeThickness: 4
-    }).setOrigin(0.5);
+    // Try to use actual character image as portrait
+    const textureKey = 'fighter-' + config.name.replace(/\s+/g, '-').toLowerCase();
+    if (this.textures.exists(textureKey)) {
+      // Create a circular masked portrait using the actual character image
+      const portraitImg = this.add.image(x, y, textureKey);
+      portraitImg.setDisplaySize(70, 70);
+      
+      // Create circular mask
+      const maskShape = this.make.graphics({});
+      maskShape.fillCircle(x, y, 32);
+      const mask = maskShape.createGeometryMask();
+      portraitImg.setMask(mask);
+    } else {
+      // Fallback to character initial
+      this.add.text(x, y, config.name.charAt(0).toUpperCase(), {
+        fontSize: '32px',
+        color: '#ffffff',
+        fontFamily: 'Impact, sans-serif',
+        stroke: '#000',
+        strokeThickness: 4
+      }).setOrigin(0.5);
+    }
   }
 
   createStage() {
