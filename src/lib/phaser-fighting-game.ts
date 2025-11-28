@@ -423,12 +423,8 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     this.isAttacking = true;
     this.canCancelInto = false;
     
-    // MvC-style super freeze
-    this.createSuperFreeze();
-    
-    this.scene.time.delayedCall(200, () => {
-      this.createMvCSuperEffect();
-    });
+    // MvC3-style cinematic super with camera effects
+    this.createCinematicSuper();
   }
 
   createScreenFlash(color: number, duration: number) {
@@ -448,59 +444,187 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     });
   }
 
-  createSuperFreeze() {
-    // Dark background flash
-    const freeze = this.scene.add.rectangle(
-      this.scene.scale.width / 2,
-      this.scene.scale.height / 2,
-      this.scene.scale.width,
-      this.scene.scale.height,
-      0x000000,
-      0.7
-    );
+  createCinematicSuper() {
+    const scene = this.scene as FightingGameScene;
+    const camera = scene.cameras.main;
     
-    // Character portrait flash
-    const portrait = this.scene.add.circle(
-      this.isPlayer ? 200 : this.scene.scale.width - 200,
-      this.scene.scale.height / 2,
-      150,
+    // Store original camera state
+    const originalZoom = camera.zoom;
+    const originalX = camera.scrollX;
+    const originalY = camera.scrollY;
+    
+    // Phase 1: Super Flash & Time Slow (MvC3 style)
+    scene.time.timeScale = 0.2; // Slow motion
+    
+    // Dramatic black bars (cinematic letterbox)
+    const topBar = scene.add.rectangle(500, 0, 1000, 80, 0x000000).setDepth(1000);
+    const bottomBar = scene.add.rectangle(500, 600, 1000, 80, 0x000000).setDepth(1000);
+    
+    // Character zoom-in
+    scene.tweens.add({
+      targets: camera,
+      zoom: 1.8,
+      scrollX: this.x - 280,
+      scrollY: this.y - 200,
+      duration: 150,
+      ease: 'Cubic.easeOut'
+    });
+    
+    // Super freeze background
+    const freezeOverlay = scene.add.rectangle(500, 300, 1000, 600, 0x000022, 0.85).setDepth(999);
+    
+    // Character spotlight
+    const spotlight = scene.add.circle(this.x, this.y, 200, 0xffffff, 0.3).setDepth(998);
+    scene.tweens.add({
+      targets: spotlight,
+      scale: 1.5,
+      alpha: 0.1,
+      duration: 300,
+      yoyo: true
+    });
+    
+    // Dynamic character portrait (MvC3 style cut-in)
+    const portraitBg = scene.add.rectangle(
+      this.isPlayer ? 180 : 820,
+      300,
+      300,
+      400,
       this.portraitColor,
-      0.8
-    );
+      0.9
+    ).setDepth(1001).setAngle(this.isPlayer ? -5 : 5);
     
-    // Super move name announcement
-    const superText = this.scene.add.text(
-      this.scene.scale.width / 2,
-      this.scene.scale.height / 2 - 50,
+    // Portrait border
+    const portraitBorder = scene.add.rectangle(
+      this.isPlayer ? 180 : 820,
+      300,
+      310,
+      410,
+      0xffffff,
+      1
+    ).setDepth(1000).setAngle(this.isPlayer ? -5 : 5);
+    
+    // Character name with dramatic entrance
+    const nameText = scene.add.text(
+      this.isPlayer ? 180 : 820,
+      450,
+      this.fighterName.toUpperCase(),
+      {
+        fontSize: '36px',
+        color: '#ffffff',
+        fontFamily: 'Impact, sans-serif',
+        stroke: '#000',
+        strokeThickness: 6
+      }
+    ).setOrigin(0.5).setDepth(1002).setAlpha(0);
+    
+    scene.tweens.add({
+      targets: nameText,
+      alpha: 1,
+      y: 430,
+      duration: 200
+    });
+    
+    // Super move name with dramatic animation
+    const superText = scene.add.text(
+      500,
+      280,
       this.superMoveName.toUpperCase(),
       {
-        fontSize: '72px',
+        fontSize: '64px',
         color: '#ffff00',
         fontFamily: 'Impact, sans-serif',
         stroke: '#ff0000',
-        strokeThickness: 10
+        strokeThickness: 8,
+        shadow: { offsetX: 4, offsetY: 4, color: '#000', blur: 8, fill: true }
       }
-    ).setOrigin(0.5);
+    ).setOrigin(0.5).setDepth(1002).setScale(0.5).setAlpha(0);
     
-    this.scene.tweens.add({
-      targets: [freeze, portrait],
-      alpha: 0,
-      duration: 400,
-      delay: 300
-    });
-    
-    this.scene.tweens.add({
+    scene.tweens.add({
       targets: superText,
-      scale: 1.5,
-      alpha: 0,
-      y: this.scene.scale.height / 2 - 100,
-      duration: 800,
-      onComplete: () => {
-        freeze.destroy();
-        portrait.destroy();
-        superText.destroy();
-      }
+      scale: 1.2,
+      alpha: 1,
+      duration: 300,
+      ease: 'Back.easeOut'
     });
+    
+    // Energy burst lines (speed lines)
+    this.createSpeedLines();
+    
+    // Phase 2: Camera pan and attack (after 600ms)
+    scene.time.delayedCall(600 * 5, () => { // Multiply by 5 due to timeScale
+      // Return time to normal
+      scene.time.timeScale = 1;
+      
+      // Dynamic camera movement during attack
+      scene.tweens.add({
+        targets: camera,
+        zoom: 1.3,
+        scrollX: (this.x + (this.isPlayer ? 200 : -200)) - 500,
+        scrollY: 50,
+        duration: 300,
+        ease: 'Sine.easeInOut'
+      });
+      
+      // Remove cinematic elements
+      scene.tweens.add({
+        targets: [freezeOverlay, spotlight, portraitBg, portraitBorder, nameText, superText, topBar, bottomBar],
+        alpha: 0,
+        duration: 200,
+        onComplete: () => {
+          freezeOverlay.destroy();
+          spotlight.destroy();
+          portraitBg.destroy();
+          portraitBorder.destroy();
+          nameText.destroy();
+          superText.destroy();
+          topBar.destroy();
+          bottomBar.destroy();
+        }
+      });
+      
+      // Execute the actual super attack
+      this.createMvCSuperEffect();
+      
+      // Phase 3: Return camera to normal
+      scene.time.delayedCall(1000, () => {
+        scene.tweens.add({
+          targets: camera,
+          zoom: originalZoom,
+          scrollX: originalX,
+          scrollY: originalY,
+          duration: 500,
+          ease: 'Sine.easeOut'
+        });
+      });
+    });
+  }
+  
+  createSpeedLines() {
+    const scene = this.scene;
+    const centerX = this.x;
+    const centerY = this.y;
+    
+    for (let i = 0; i < 20; i++) {
+      const angle = (i / 20) * Math.PI * 2;
+      const line = scene.add.rectangle(
+        centerX + Math.cos(angle) * 50,
+        centerY + Math.sin(angle) * 50,
+        400,
+        4,
+        0xffffff,
+        0.8
+      ).setRotation(angle).setDepth(997);
+      
+      scene.tweens.add({
+        targets: line,
+        x: centerX + Math.cos(angle) * 600,
+        y: centerY + Math.sin(angle) * 600,
+        alpha: 0,
+        duration: 400,
+        delay: i * 20,
+        onComplete: () => line.destroy()
+      });
+    }
   }
 
   createMvCProjectile() {
@@ -574,60 +698,143 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
   }
 
   createMvCSuperEffect() {
-    // Full screen beam/attack
-    const beamWidth = 200;
-    const beam = this.scene.add.rectangle(
+    // MvC3-style massive energy beam attack
+    const scene = this.scene;
+    const beamWidth = 180;
+    
+    // Initial energy charge effect
+    const chargeEffect = scene.add.circle(this.x + (this.facing * 40), this.y, 20, 0xffff00, 1);
+    scene.tweens.add({
+      targets: chargeEffect,
+      scale: 4,
+      alpha: 0.3,
+      duration: 200,
+      onComplete: () => chargeEffect.destroy()
+    });
+    
+    // Main beam with gradient effect
+    const beam = scene.add.rectangle(
       this.x + (this.facing * 400),
       this.y,
       800,
       beamWidth,
       0xffff00,
+      0.95
+    );
+    
+    // Inner beam (brighter core)
+    const innerBeam = scene.add.rectangle(
+      this.x + (this.facing * 400),
+      this.y,
+      800,
+      beamWidth * 0.5,
+      0xffffff,
       0.9
     );
     
-    // Beam animation
-    this.scene.tweens.add({
-      targets: beam,
-      scaleY: 1.5,
-      alpha: 0.5,
-      duration: 200,
+    // Beam edge glow
+    const beamGlow = scene.add.rectangle(
+      this.x + (this.facing * 400),
+      this.y,
+      820,
+      beamWidth + 40,
+      this.portraitColor,
+      0.5
+    );
+    
+    // Dramatic beam animation with scaling
+    scene.tweens.add({
+      targets: [beam, innerBeam, beamGlow],
+      scaleY: { from: 0.1, to: 1.5 },
+      duration: 150,
+      ease: 'Cubic.easeOut',
       yoyo: true,
-      repeat: 3,
-      onComplete: () => beam.destroy()
+      hold: 400,
+      onComplete: () => {
+        beam.destroy();
+        innerBeam.destroy();
+        beamGlow.destroy();
+      }
     });
     
-    // Multiple projectile waves
-    for (let wave = 0; wave < 5; wave++) {
-      this.scene.time.delayedCall(wave * 100, () => {
-        for (let i = 0; i < 3; i++) {
-          const projectile = this.scene.add.circle(
+    // Energy particles along beam
+    for (let i = 0; i < 30; i++) {
+      scene.time.delayedCall(i * 30, () => {
+        const particle = scene.add.circle(
+          this.x + (this.facing * Phaser.Math.Between(50, 700)),
+          this.y + Phaser.Math.Between(-80, 80),
+          Phaser.Math.Between(8, 20),
+          SUPER_COLORS[i % SUPER_COLORS.length],
+          0.9
+        );
+        scene.tweens.add({
+          targets: particle,
+          y: particle.y + Phaser.Math.Between(-50, 50),
+          alpha: 0,
+          scale: 0.2,
+          duration: 300,
+          onComplete: () => particle.destroy()
+        });
+      });
+    }
+    
+    // Multiple projectile waves with trails
+    for (let wave = 0; wave < 6; wave++) {
+      scene.time.delayedCall(wave * 80, () => {
+        for (let i = 0; i < 4; i++) {
+          const yOffset = (i - 1.5) * 35;
+          const projectile = scene.add.circle(
             this.x + (this.facing * 80),
-            this.y + (i * 40 - 40),
-            25,
+            this.y + yOffset,
+            22,
             SUPER_COLORS[wave % SUPER_COLORS.length]
           );
-          this.scene.physics.add.existing(projectile);
+          scene.physics.add.existing(projectile);
           const body = projectile.body as Phaser.Physics.Arcade.Body;
-          body.setVelocityX(this.facing * 700);
+          body.setVelocityX(this.facing * 800);
           
-          this.scene.tweens.add({
+          // Projectile trail
+          const createTrail = () => {
+            if (!projectile.active) return;
+            const trail = scene.add.circle(projectile.x, projectile.y, 15, projectile.fillColor as number, 0.5);
+            scene.tweens.add({
+              targets: trail,
+              alpha: 0,
+              scale: 0.3,
+              duration: 150,
+              onComplete: () => trail.destroy()
+            });
+          };
+          
+          const trailTimer = scene.time.addEvent({ delay: 40, callback: createTrail, loop: true });
+          
+          scene.tweens.add({
             targets: projectile,
-            scale: 1.3,
-            alpha: 0.6,
+            scale: { from: 0.5, to: 1.3 },
             duration: 100,
             yoyo: true,
             repeat: -1
           });
           
-          this.scene.time.delayedCall(1200, () => projectile.destroy());
-          (projectile as any).damage = 35;
+          scene.time.delayedCall(1000, () => {
+            trailTimer.destroy();
+            projectile.destroy();
+          });
+          (projectile as any).damage = 40;
           (projectile as any).owner = this;
         }
       });
     }
     
-    // Screen shake
-    this.scene.cameras.main.shake(500, 0.02);
+    // Dramatic screen shake with multiple intensities
+    scene.cameras.main.shake(200, 0.03);
+    scene.time.delayedCall(200, () => scene.cameras.main.shake(300, 0.02));
+    scene.time.delayedCall(500, () => scene.cameras.main.shake(200, 0.01));
+    
+    // Final impact flash
+    scene.time.delayedCall(600, () => {
+      this.createScreenFlash(0xffffff, 150);
+    });
   }
 
   block() {
