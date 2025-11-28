@@ -638,17 +638,19 @@ const ArcadeFighting = () => {
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
         </Button>
 
-        <h1 className="text-4xl md:text-5xl font-bold text-center mb-2 text-glow">
-          Spiritual Warfare
+        <h1 className="text-4xl md:text-6xl font-bold text-center mb-2 bg-gradient-to-r from-yellow-400 via-red-500 to-purple-500 bg-clip-text text-transparent drop-shadow-lg" style={{ fontFamily: 'Impact, sans-serif' }}>
+          SPIRITUAL WARFARE
         </h1>
-        <p className="text-center text-muted-foreground mb-8">
-          2D Arcade Fighting • {wins} Wins
+        <p className="text-center text-lg font-semibold mb-8 text-primary">
+          <span className="text-yellow-400">2.5D</span> MARVEL VS CAPCOM STYLE • <span className="text-accent">{wins} WINS</span>
         </p>
 
         {gameState === "selection" && (
           <div className="space-y-8">
             <div>
-              <h2 className="text-2xl font-semibold mb-4 text-center">Select Your Warrior</h2>
+              <h2 className="text-3xl font-semibold mb-6 text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent" style={{ fontFamily: 'Impact, sans-serif' }}>
+                SELECT YOUR WARRIOR
+              </h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                 {characters.map((char) => (
                   <Card
@@ -736,7 +738,9 @@ const ArcadeFighting = () => {
             </div>
 
             <div>
-              <h2 className="text-2xl font-semibold mb-4 text-center">Select Opponent</h2>
+              <h2 className="text-3xl font-semibold mb-6 text-center bg-gradient-to-r from-red-400 to-orange-500 bg-clip-text text-transparent" style={{ fontFamily: 'Impact, sans-serif' }}>
+                SELECT OPPONENT
+              </h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                 {characters.map((char) => (
                   <Card
@@ -840,29 +844,39 @@ const ArcadeFighting = () => {
               {wins >= 20 && <p className="mt-2 text-accent">🌟 Defeat Lucifer to unlock The Beast!</p>}
             </div>
             
-            {/* Controls Info */}
-            <Card className="max-w-2xl mx-auto p-6 bg-background/50">
-              <h3 className="font-bold text-center mb-4">⌨️ Controls & 🎮 Gamepad</h3>
-              <div className="grid md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="font-semibold mb-2">Gamepad (Auto-detected):</p>
+            {/* MvC Style Controls Info */}
+            <Card className="max-w-3xl mx-auto p-6 bg-gradient-to-br from-background/90 via-primary/5 to-background/90 border-2 border-primary/30">
+              <h3 className="font-bold text-center mb-4 text-xl text-primary" style={{ fontFamily: 'Impact, sans-serif' }}>
+                MARVEL VS CAPCOM CONTROLS
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6 text-sm">
+                <div className="space-y-2">
+                  <p className="font-semibold mb-2 text-yellow-400">🎮 Gamepad:</p>
                   <ul className="space-y-1 text-muted-foreground">
-                    <li>• A/Cross - Light Attack</li>
-                    <li>• B/Circle - Heavy Attack</li>
-                    <li>• X/Square - Launcher</li>
-                    <li>• Y/Triangle - Combo Breaker</li>
-                    <li>• RB/R1 - Hyper Combo</li>
+                    <li>• <span className="text-green-400">A/Cross</span> - Light Attack</li>
+                    <li>• <span className="text-red-400">B/Circle</span> - Heavy Attack</li>
+                    <li>• <span className="text-blue-400">X/Square</span> - Launcher</li>
+                    <li>• <span className="text-yellow-400">Y/Triangle</span> - Combo Breaker</li>
+                    <li>• <span className="text-purple-400">RB/R1</span> - HYPER COMBO</li>
                   </ul>
                 </div>
-                <div>
-                  <p className="font-semibold mb-2">Keyboard & Mouse:</p>
+                <div className="space-y-2">
+                  <p className="font-semibold mb-2 text-cyan-400">⌨️ Keyboard:</p>
                   <ul className="space-y-1 text-muted-foreground">
-                    <li>• Click buttons to attack</li>
-                    <li>• Select characters with mouse</li>
-                    <li>• Choose boosters & arenas</li>
+                    <li>• <span className="text-white">← → ↑</span> - Move & Jump</li>
+                    <li>• <span className="text-green-400">J</span> - Light Attack</li>
+                    <li>• <span className="text-red-400">K</span> - Heavy Attack</li>
+                    <li>• <span className="text-blue-400">I</span> - Launcher (Air Combo)</li>
+                    <li>• <span className="text-cyan-400">D</span> - Air Dash</li>
+                    <li>• <span className="text-orange-400">L</span> - Block</li>
+                    <li>• <span className="text-yellow-400">U</span> - Special Move</li>
+                    <li>• <span className="text-purple-400">A</span> - HYPER COMBO</li>
                   </ul>
                 </div>
               </div>
+              <p className="text-center text-xs text-muted-foreground mt-4">
+                Build meter by landing hits • Chain Light → Heavy → Launcher for air combos!
+              </p>
             </Card>
           </div>
         )}
