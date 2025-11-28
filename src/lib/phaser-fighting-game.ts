@@ -30,6 +30,12 @@ interface AnimationFrame {
   hitboxActive?: boolean;
   moveSpeed?: number;
   invincible?: boolean;
+  scaleX?: number;
+  scaleY?: number;
+  offsetX?: number;
+  offsetY?: number;
+  rotation?: number;
+  tint?: number;
 }
 
 // MvC-style particle colors
@@ -62,51 +68,109 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
   public airActionsRemaining = 2;
   public portraitColor: number;
   private characterGraphics?: Phaser.GameObjects.Graphics;
+  private baseScaleX = 1;
+  private baseScaleY = 1;
+  private baseY = 0;
   
   public animState: AnimState = 'idle';
   public animFrame = 0;
   public animFrameTimer = 0;
   private animationFrames: Record<AnimState, AnimationFrame[]> = {
-    idle: [{ duration: 100 }],
-    walk: [{ duration: 80 }],
-    jump: [{ duration: 150 }],
-    air_dash: [{ duration: 200, invincible: true }],
-    land: [{ duration: 80 }],
+    // Idle breathing animation - 8 frames for smooth loop
+    idle: [
+      { duration: 120, scaleY: 1.0, offsetY: 0 },
+      { duration: 120, scaleY: 1.01, offsetY: -2 },
+      { duration: 120, scaleY: 1.02, offsetY: -3 },
+      { duration: 120, scaleY: 1.01, offsetY: -2 },
+      { duration: 120, scaleY: 1.0, offsetY: 0 },
+      { duration: 120, scaleY: 0.99, offsetY: 1 },
+      { duration: 120, scaleY: 0.98, offsetY: 2 },
+      { duration: 120, scaleY: 0.99, offsetY: 1 },
+    ],
+    // Walk animation with bob
+    walk: [
+      { duration: 80, scaleY: 1.0, offsetY: 0, offsetX: 0 },
+      { duration: 80, scaleY: 0.98, offsetY: 3, offsetX: 2 },
+      { duration: 80, scaleY: 1.0, offsetY: 0, offsetX: 0 },
+      { duration: 80, scaleY: 0.98, offsetY: 3, offsetX: -2 },
+    ],
+    // Jump with squash/stretch
+    jump: [
+      { duration: 60, scaleX: 0.9, scaleY: 1.15, offsetY: 0 },
+      { duration: 200, scaleX: 1.0, scaleY: 1.0, offsetY: 0 },
+      { duration: 100, scaleX: 1.05, scaleY: 0.95, offsetY: 0 },
+    ],
+    air_dash: [{ duration: 200, invincible: true, scaleX: 1.1, scaleY: 0.9 }],
+    land: [
+      { duration: 40, scaleX: 1.15, scaleY: 0.85, offsetY: 10 },
+      { duration: 60, scaleX: 1.0, scaleY: 1.0, offsetY: 0 },
+    ],
+    // Light attack - quick jab animation
     light_attack: [
-      { duration: 30 },
-      { duration: 80, hitboxActive: true, moveSpeed: 200 },
-      { duration: 100 }
+      { duration: 30, scaleX: 0.95, rotation: -0.05 },
+      { duration: 50, hitboxActive: true, moveSpeed: 200, scaleX: 1.1, rotation: 0.1, tint: 0xffffcc },
+      { duration: 40, hitboxActive: true, moveSpeed: 100, scaleX: 1.05, rotation: 0.05 },
+      { duration: 60, scaleX: 1.0, rotation: 0 }
     ],
+    // Heavy attack - big swing
     heavy_attack: [
-      { duration: 60 },
-      { duration: 120, hitboxActive: true, moveSpeed: 350 },
-      { duration: 180 }
+      { duration: 80, scaleX: 0.9, scaleY: 1.05, rotation: -0.15 },
+      { duration: 60, scaleX: 1.15, scaleY: 0.95, rotation: 0.1, tint: 0xffcc00 },
+      { duration: 80, hitboxActive: true, moveSpeed: 350, scaleX: 1.2, rotation: 0.2, tint: 0xff6600 },
+      { duration: 60, hitboxActive: true, moveSpeed: 150, scaleX: 1.1, rotation: 0.1 },
+      { duration: 100, scaleX: 1.0, rotation: 0 }
     ],
+    // Launcher - uppercut motion
     launcher: [
-      { duration: 50 },
-      { duration: 100, hitboxActive: true },
-      { duration: 150 }
+      { duration: 40, scaleY: 0.9, offsetY: 10, rotation: -0.1 },
+      { duration: 60, scaleY: 1.1, offsetY: -15, rotation: 0.05, tint: 0x66ccff },
+      { duration: 80, hitboxActive: true, scaleY: 1.15, offsetY: -25, rotation: 0.1, tint: 0x00ffff },
+      { duration: 100, scaleY: 1.0, offsetY: 0, rotation: 0 }
     ],
+    // Air combo - rapid hits
     air_combo: [
-      { duration: 40 },
-      { duration: 100, hitboxActive: true },
-      { duration: 120 }
+      { duration: 30, rotation: -0.1, scaleX: 0.95 },
+      { duration: 50, hitboxActive: true, rotation: 0.15, scaleX: 1.1, tint: 0xffaa00 },
+      { duration: 40, hitboxActive: true, rotation: -0.1, scaleX: 1.05, tint: 0xffcc00 },
+      { duration: 50, rotation: 0, scaleX: 1.0 }
     ],
+    // Special move - dramatic windup
     special: [
-      { duration: 80 },
-      { duration: 200, hitboxActive: true, invincible: true },
-      { duration: 250 }
+      { duration: 60, scaleX: 0.85, scaleY: 1.1, rotation: -0.2, tint: 0x6666ff },
+      { duration: 40, scaleX: 0.9, scaleY: 1.05, rotation: -0.1, tint: 0x8888ff },
+      { duration: 150, hitboxActive: true, invincible: true, scaleX: 1.2, scaleY: 0.9, rotation: 0.15, tint: 0xffffff },
+      { duration: 100, hitboxActive: true, scaleX: 1.1, rotation: 0.05, tint: 0xccccff },
+      { duration: 80, scaleX: 1.0, rotation: 0 }
     ],
+    // Super move - maximum impact
     super: [
-      { duration: 150, invincible: true },
-      { duration: 400, hitboxActive: true, invincible: true },
-      { duration: 300 }
+      { duration: 100, invincible: true, scaleX: 0.8, scaleY: 1.2, rotation: -0.2, tint: 0xff00ff },
+      { duration: 80, invincible: true, scaleX: 0.85, scaleY: 1.15, tint: 0xff66ff },
+      { duration: 250, hitboxActive: true, invincible: true, scaleX: 1.3, scaleY: 0.85, rotation: 0.2, tint: 0xffff00 },
+      { duration: 150, hitboxActive: true, invincible: true, scaleX: 1.2, rotation: 0.1, tint: 0xffaa00 },
+      { duration: 120, scaleX: 1.0, scaleY: 1.0, rotation: 0 }
     ],
-    block: [{ duration: 30 }],
-    hit: [{ duration: 80 }, { duration: 150 }],
-    crouch: [{ duration: 80 }],
-    ground_bounce: [{ duration: 300 }],
-    wall_bounce: [{ duration: 250 }]
+    // Block - defensive crouch
+    block: [
+      { duration: 30, scaleX: 0.95, scaleY: 0.95, offsetY: 5, tint: 0x6699ff },
+    ],
+    // Hit stun - recoil animation
+    hit: [
+      { duration: 60, scaleX: 0.9, rotation: -0.15, offsetX: -10, tint: 0xff0000 },
+      { duration: 80, scaleX: 0.95, rotation: -0.08, offsetX: -5, tint: 0xff6666 },
+      { duration: 60, scaleX: 1.0, rotation: 0, offsetX: 0 }
+    ],
+    crouch: [{ duration: 80, scaleY: 0.8, offsetY: 20 }],
+    ground_bounce: [
+      { duration: 100, scaleY: 0.7, scaleX: 1.2, offsetY: 30, rotation: 0.3, tint: 0xff6600 },
+      { duration: 100, scaleY: 1.1, scaleX: 0.9, offsetY: -20, rotation: 0.1 },
+      { duration: 100, scaleY: 1.0, scaleX: 1.0, offsetY: 0, rotation: 0 }
+    ],
+    wall_bounce: [
+      { duration: 80, scaleX: 0.8, scaleY: 1.1, rotation: -0.3, tint: 0xff6600 },
+      { duration: 100, scaleX: 1.1, scaleY: 0.95, rotation: 0.1 },
+      { duration: 70, scaleX: 1.0, scaleY: 1.0, rotation: 0 }
+    ]
   };
 
   constructor(
@@ -303,13 +367,17 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
 
   updateAnimation(delta: number) {
     const currentAnim = this.animationFrames[this.animState];
-    if (!currentAnim || this.animFrame >= currentAnim.length) {
-      if (this.animState !== 'idle' && this.animState !== 'walk') {
+    
+    // Loop idle and walk animations
+    if (this.animFrame >= currentAnim.length) {
+      if (this.animState === 'idle' || this.animState === 'walk') {
+        this.animFrame = 0; // Loop
+      } else {
         this.changeState('idle');
         this.isAttacking = false;
         this.hitboxActive = false;
+        return;
       }
-      return;
     }
 
     const currentFrame = currentAnim[this.animFrame];
@@ -321,11 +389,26 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
       body.setVelocityX(this.facing * currentFrame.moveSpeed);
     }
 
-    // Visual effects based on state - use tint only, don't change scale for actual images
-    if (currentFrame.hitboxActive) {
-      this.setTint(0xffaa00);
+    // Apply frame-based visual transformations
+    const targetScaleX = (currentFrame.scaleX ?? 1) * this.baseScaleX * this.facing;
+    const targetScaleY = (currentFrame.scaleY ?? 1) * this.baseScaleY;
+    const targetRotation = (currentFrame.rotation ?? 0) * this.facing;
+    const offsetX = (currentFrame.offsetX ?? 0) * this.facing;
+    const offsetY = currentFrame.offsetY ?? 0;
+    
+    // Smooth interpolation for fluid animation
+    this.scaleX = Phaser.Math.Linear(this.scaleX, targetScaleX, 0.3);
+    this.scaleY = Phaser.Math.Linear(this.scaleY, targetScaleY, 0.3);
+    this.rotation = Phaser.Math.Linear(this.rotation, targetRotation, 0.3);
+    
+    // Apply position offset
+    if (this.baseY === 0) this.baseY = this.y;
+    
+    // Apply tint from frame or state
+    if (currentFrame.tint) {
+      this.setTint(currentFrame.tint);
     } else if (currentFrame.invincible) {
-      this.setAlpha(0.7);
+      this.setAlpha(0.8);
       this.setTint(0x00ffff);
     } else {
       this.clearTint();
@@ -335,6 +418,19 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     if (this.animFrameTimer >= currentFrame.duration) {
       this.animFrame++;
       this.animFrameTimer = 0;
+    }
+  }
+
+  // Store base scale after image loads
+  initializeBaseScale() {
+    // For image sprites, get the actual display size ratio
+    this.baseScaleX = Math.abs(this.scaleX) || 1;
+    this.baseScaleY = this.scaleY || 1;
+    this.baseY = this.y;
+    
+    // Handle opponent starting flipped
+    if (!this.isPlayer) {
+      this.scaleX = -this.baseScaleX;
     }
   }
 
@@ -1196,7 +1292,10 @@ export class FightingGameScene extends Phaser.Scene {
     this.player = new FighterSprite(this, 250, 420, this.playerConfig, true, this.playerSuperMove);
     this.opponent = new FighterSprite(this, this.scale.width - 250, 420, this.opponentConfig, false, this.opponentSuperMove);
     this.opponent.facing = -1;
-    this.opponent.setFlipX(true);
+    
+    // Initialize base scale for animation system
+    this.player.initializeBaseScale();
+    this.opponent.initializeBaseScale();
 
     // Input setup
     this.cursors = this.input.keyboard!.createCursorKeys();
