@@ -66,12 +66,16 @@ export const PhaserGame = ({ playerConfig, opponentConfig, arenaKey, onGameEnd, 
         className="border-4 border-primary rounded-lg overflow-hidden shadow-2xl"
         style={{ width: '1000px', height: '600px' }}
       />
-      <div className="text-center space-y-2">
+      <div className="text-center space-y-2 bg-background/80 backdrop-blur-sm rounded-lg p-4 border border-primary/30">
+        <p className="text-sm font-semibold text-primary">MARVEL VS CAPCOM STYLE CONTROLS</p>
         <p className="text-sm text-muted-foreground">
-          <strong>Basic Controls:</strong> Arrow Keys = Move • ↑ = Jump • J = Light Attack • K = Heavy Attack • L = Block
+          <strong>Movement:</strong> ← → = Walk • ↑ = Jump • D = Air Dash
         </p>
-        <p className="text-xs text-muted-foreground">
-          <strong>Advanced:</strong> U = Special Move (25 meter) • A = Super Move (100 meter) • Build meter by landing attacks!
+        <p className="text-sm text-muted-foreground">
+          <strong>Attacks:</strong> J = Light • K = Heavy • I = Launcher • L = Block
+        </p>
+        <p className="text-xs text-accent">
+          <strong>Specials:</strong> U = Special Move (25 meter) • A = HYPER COMBO (100 meter)
         </p>
       </div>
     </div>
