@@ -1115,7 +1115,8 @@ const ArcadeFighting = () => {
                 speed: 5,
                 jumpPower: 12,
                 spriteKey: player.id,
-                alignment: player.alignment as 'Good' | 'Evil'
+                alignment: player.alignment as 'Good' | 'Evil',
+                imageUrl: characterImages[player.name]
               }}
               opponentConfig={{
                 name: opponent.name,
@@ -1125,7 +1126,8 @@ const ArcadeFighting = () => {
                 speed: 4,
                 jumpPower: 10,
                 spriteKey: opponent.id,
-                alignment: opponent.alignment as 'Good' | 'Evil'
+                alignment: opponent.alignment as 'Good' | 'Evil',
+                imageUrl: characterImages[opponent.name]
               }}
               arenaKey={selectedArena.id}
               onGameEnd={finishBattle}
@@ -1136,15 +1138,17 @@ const ArcadeFighting = () => {
                 attack: playerAssist.attack,
                 alignment: playerAssist.alignment as 'Good' | 'Evil',
                 assistType: playerAssist.attack > 250 ? 'rush' : playerAssist.defense > 180 ? 'anti-air' : 'projectile',
-                assistMove: playerAssist.superMove || 'Assist Attack'
-              } : undefined}
+                assistMove: playerAssist.superMove || 'Assist Attack',
+                imageUrl: characterImages[playerAssist.name]
+              } as any : undefined}
               opponentAssist={{
                 name: opponent.name === 'Goliath' ? 'Pharaoh' : 'Goliath',
                 attack: 200,
                 alignment: 'Evil',
                 assistType: 'rush',
-                assistMove: 'Assist Rush'
-              }}
+                assistMove: 'Assist Rush',
+                imageUrl: characterImages[opponent.name === 'Goliath' ? 'Pharaoh' : 'Goliath']
+              } as any}
             />
 
             <div className="text-center">
