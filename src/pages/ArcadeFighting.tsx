@@ -13,7 +13,7 @@ import {
   type Character as EngineCharacter 
 } from "@/lib/fighting-engine";
 import { PhaserGame } from "@/components/PhaserGame";
-import type { FighterConfig } from "@/lib/phaser-fighting-game";
+import type { FighterConfig, AssistConfig } from "@/lib/phaser-fighting-game";
 
 // Import character images
 import mosesImg from "@/assets/characters/moses.png";
@@ -136,9 +136,10 @@ const characters = [
 
 const ArcadeFighting = () => {
   const navigate = useNavigate();
-  const [gameState, setGameState] = useState<"selection" | "booster" | "arena" | "battle" | "victory">("selection");
+  const [gameState, setGameState] = useState<"selection" | "assist" | "booster" | "arena" | "battle" | "victory">("selection");
   const [player, setPlayer] = useState<typeof characters[0] | null>(null);
   const [opponent, setOpponent] = useState<typeof characters[0] | null>(null);
+  const [playerAssist, setPlayerAssist] = useState<typeof characters[0] | null>(null);
   const [playerBooster, setPlayerBooster] = useState<Booster | null>(null);
   const [selectedArena, setSelectedArena] = useState<typeof arenas[0] | null>(null);
   const [playerHP, setPlayerHP] = useState(100);
@@ -232,12 +233,38 @@ const ArcadeFighting = () => {
   
   const proceedToBoosterSelection = () => {
     if (player && opponent) {
-      setGameState("booster");
+      setGameState("assist");
     }
+  };
+  
+  const proceedFromAssistToBooster = () => {
+    setGameState("booster");
   };
   
   const proceedToArenaSelection = () => {
     setGameState("arena");
+  };
+
+  const selectAssist = (char: typeof characters[0]) => {
+    // Can't select same character as main fighter
+    if (char.id === player?.id) {
+      toast({
+        title: "Invalid Selection",
+        description: "Assist must be different from your main fighter!",
+        variant: "destructive"
+      });
+      return;
+    }
+    // Check if locked
+    if (char.unlockable && !unlockedCharacters.includes(char.id)) {
+      toast({
+        title: "Character Locked",
+        description: `Win more battles to unlock ${char.name}!`,
+        variant: "destructive"
+      });
+      return;
+    }
+    setPlayerAssist(char);
   };
 
   const startBattle = () => {
@@ -871,6 +898,7 @@ const ArcadeFighting = () => {
                     <li>• <span className="text-orange-400">L</span> - Block</li>
                     <li>• <span className="text-yellow-400">U</span> - Special Move</li>
                     <li>• <span className="text-purple-400">A</span> - HYPER COMBO</li>
+                    <li>• <span className="text-green-500 font-bold">E</span> - CALL ASSIST</li>
                   </ul>
                 </div>
               </div>
@@ -878,6 +906,91 @@ const ArcadeFighting = () => {
                 Build meter by landing hits • Chain Light → Heavy → Launcher for air combos!
               </p>
             </Card>
+          </div>
+        )}
+
+        {gameState === "assist" && (
+          <div className="space-y-8 animate-fade-in">
+            <h2 className="text-3xl font-semibold text-center bg-gradient-to-r from-green-400 to-cyan-500 bg-clip-text text-transparent" style={{ fontFamily: 'Impact, sans-serif' }}>
+              SELECT YOUR ASSIST PARTNER
+            </h2>
+            <p className="text-center text-muted-foreground">
+              Choose a partner who will jump in to help during battle! Press <span className="text-green-400 font-bold">E</span> to call your assist.
+            </p>
+            
+            {/* No Assist Option */}
+            <div className="flex justify-center">
+              <Card
+                className={`cursor-pointer transition-all duration-300 hover:scale-105 w-48 ${
+                  !playerAssist ? "ring-4 ring-green-400 shadow-[0_0_30px_rgba(74,222,128,0.4)]" : "opacity-60"
+                }`}
+                onClick={() => setPlayerAssist(null)}
+              >
+                <div className="p-4 text-center">
+                  <div className="text-4xl mb-2">🚫</div>
+                  <h3 className="font-bold">No Assist</h3>
+                  <p className="text-xs text-muted-foreground">Fight solo</p>
+                </div>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 max-w-6xl mx-auto">
+              {characters.filter(c => !c.unlockable || unlockedCharacters.includes(c.id)).filter(c => c.id !== player?.id).map((char) => (
+                <Card
+                  key={char.id}
+                  className={`relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 group ${
+                    playerAssist?.id === char.id ? "ring-4 ring-green-400 shadow-[0_0_30px_rgba(74,222,128,0.4)]" : ""
+                  } ${char.alignment === "Evil" ? "border-destructive/50" : "border-primary/50"}`}
+                  onClick={() => selectAssist(char)}
+                >
+                  <div className="relative h-32 overflow-hidden">
+                    <img
+                      src={characterImages[char.name]}
+                      alt={char.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className={`absolute inset-0 bg-gradient-to-t ${
+                      char.alignment === "Evil" 
+                        ? "from-destructive/80 via-transparent to-transparent" 
+                        : "from-primary/80 via-transparent to-transparent"
+                    }`} />
+                    {playerAssist?.id === char.id && (
+                      <div className="absolute top-2 right-2">
+                        <Badge className="bg-green-500 text-xs">ASSIST</Badge>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-2 text-center">
+                    <h3 className="font-bold text-sm">{char.name}</h3>
+                    <p className="text-[10px] text-muted-foreground">
+                      {char.attack > 250 ? '🔥 Rush' : char.defense > 180 ? '🛡️ Anti-Air' : '💫 Projectile'}
+                    </p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            {playerAssist && (
+              <div className="text-center">
+                <Card className="inline-block p-4 bg-green-500/10 border-green-500/30">
+                  <p className="text-sm">
+                    <span className="text-green-400 font-bold">{playerAssist.name}</span> will assist with{' '}
+                    <span className="text-cyan-400">
+                      {playerAssist.attack > 250 ? 'Rush Attack' : playerAssist.defense > 180 ? 'Anti-Air' : 'Projectile'}
+                    </span>
+                  </p>
+                </Card>
+              </div>
+            )}
+
+            <div className="flex justify-center gap-4">
+              <Button variant="outline" onClick={() => setGameState("selection")}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Button>
+              <Button size="lg" onClick={proceedFromAssistToBooster} className="text-lg px-8 bg-gradient-to-r from-green-500 to-cyan-500">
+                <Sparkles className="mr-2 h-5 w-5" /> CONTINUE
+              </Button>
+            </div>
           </div>
         )}
 
@@ -1018,6 +1131,20 @@ const ArcadeFighting = () => {
               onGameEnd={finishBattle}
               playerSuperMove={player.superMove}
               opponentSuperMove={opponent.superMove}
+              playerAssist={playerAssist ? {
+                name: playerAssist.name,
+                attack: playerAssist.attack,
+                alignment: playerAssist.alignment as 'Good' | 'Evil',
+                assistType: playerAssist.attack > 250 ? 'rush' : playerAssist.defense > 180 ? 'anti-air' : 'projectile',
+                assistMove: playerAssist.superMove || 'Assist Attack'
+              } : undefined}
+              opponentAssist={{
+                name: opponent.name === 'Goliath' ? 'Pharaoh' : 'Goliath',
+                attack: 200,
+                alignment: 'Evil',
+                assistType: 'rush',
+                assistMove: 'Assist Rush'
+              }}
             />
 
             <div className="text-center">
@@ -1027,6 +1154,7 @@ const ArcadeFighting = () => {
                 setOpponent(null);
                 setSelectedArena(null);
                 setPlayerBooster(null);
+                setPlayerAssist(null);
               }}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back to Menu
               </Button>
