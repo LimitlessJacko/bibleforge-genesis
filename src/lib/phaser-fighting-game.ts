@@ -154,21 +154,28 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     block: [
       { duration: 30, scaleX: 0.95, scaleY: 0.95, offsetY: 5, tint: 0x6699ff },
     ],
-    // Hit stun - recoil animation
+    // Hit stun - impactful recoil animation with stagger
     hit: [
-      { duration: 60, scaleX: 0.9, rotation: -0.15, offsetX: -10, tint: 0xff0000 },
-      { duration: 80, scaleX: 0.95, rotation: -0.08, offsetX: -5, tint: 0xff6666 },
-      { duration: 60, scaleX: 1.0, rotation: 0, offsetX: 0 }
+      { duration: 40, scaleX: 0.75, scaleY: 1.15, rotation: -0.25, offsetX: -25, tint: 0xffffff }, // Initial hit freeze
+      { duration: 60, scaleX: 0.8, scaleY: 1.1, rotation: -0.2, offsetX: -20, tint: 0xff0000 }, // Recoil
+      { duration: 80, scaleX: 0.85, scaleY: 1.05, rotation: -0.15, offsetX: -15, tint: 0xff3333 }, // Stagger back
+      { duration: 70, scaleX: 0.9, scaleY: 1.02, rotation: -0.1, offsetX: -10, tint: 0xff6666 }, // Recovery start
+      { duration: 60, scaleX: 0.95, rotation: -0.05, offsetX: -5, tint: 0xff9999 }, // Near recovery
+      { duration: 50, scaleX: 1.0, rotation: 0, offsetX: 0 } // Full recovery
     ],
     crouch: [{ duration: 80, scaleY: 0.8, offsetY: 20 }],
     ground_bounce: [
-      { duration: 100, scaleY: 0.7, scaleX: 1.2, offsetY: 30, rotation: 0.3, tint: 0xff6600 },
-      { duration: 100, scaleY: 1.1, scaleX: 0.9, offsetY: -20, rotation: 0.1 },
+      { duration: 60, scaleY: 0.5, scaleX: 1.4, offsetY: 40, rotation: 0.4, tint: 0xff3300 }, // Impact squash
+      { duration: 80, scaleY: 0.6, scaleX: 1.3, offsetY: 35, rotation: 0.35, tint: 0xff6600 },
+      { duration: 100, scaleY: 1.2, scaleX: 0.85, offsetY: -30, rotation: 0.15, tint: 0xffaa00 }, // Bounce up
+      { duration: 80, scaleY: 1.1, scaleX: 0.9, offsetY: -15, rotation: 0.08 },
       { duration: 100, scaleY: 1.0, scaleX: 1.0, offsetY: 0, rotation: 0 }
     ],
     wall_bounce: [
-      { duration: 80, scaleX: 0.8, scaleY: 1.1, rotation: -0.3, tint: 0xff6600 },
-      { duration: 100, scaleX: 1.1, scaleY: 0.95, rotation: 0.1 },
+      { duration: 50, scaleX: 0.6, scaleY: 1.25, rotation: -0.4, tint: 0xff3300 }, // Wall impact
+      { duration: 70, scaleX: 0.7, scaleY: 1.2, rotation: -0.35, tint: 0xff6600 },
+      { duration: 100, scaleX: 1.15, scaleY: 0.9, rotation: 0.15, tint: 0xffaa00 }, // Bounce off
+      { duration: 80, scaleX: 1.08, scaleY: 0.95, rotation: 0.08 },
       { duration: 70, scaleX: 1.0, scaleY: 1.0, rotation: 0 }
     ]
   };
@@ -961,6 +968,7 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
 
   takeDamage(damage: number, knockback: number, isBlocked: boolean = false, isLauncher: boolean = false) {
     const body = this.body as Phaser.Physics.Arcade.Body;
+    const scene = this.scene as FightingGameScene;
     
     if (isBlocked) {
       damage *= 0.2;
@@ -973,31 +981,66 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
       
       // Block spark effect
       this.createBlockSpark();
+      
+      // Light pushback on block
+      body.setVelocityX(knockback * -this.facing * 0.3);
+      
+      // Light screen shake on block
+      scene.cameras.main.shake(50, 0.005);
     } else {
-      this.hitstunFrames = Math.floor(damage * 2.5);
+      this.hitstunFrames = Math.floor(damage * 3);
       this.changeState('hit');
       this.engineChar.state = 'hit_stun';
       this.isAttacking = false;
       this.canCancelInto = false;
       
+      // Hit freeze effect - brief pause for impact
+      const hitFreezeTime = Math.min(damage * 2, 80);
+      scene.time.timeScale = 0.1;
+      scene.time.delayedCall(hitFreezeTime, () => {
+        scene.time.timeScale = 1;
+      });
+      
+      // Calculate knockback based on damage intensity
+      const knockbackMultiplier = 1 + (damage / 50);
+      
       if (isLauncher) {
         // Launch into air for air combo
-        body.setVelocityY(-500);
-        body.setVelocityX(knockback * -this.facing * 0.5);
+        body.setVelocityY(-550 - (damage * 3));
+        body.setVelocityX(knockback * -this.facing * 0.6 * knockbackMultiplier);
+        this.createLaunchEffect();
       } else {
-        body.setVelocityX(knockback * -this.facing);
-        body.setVelocityY(-80);
+        // Enhanced knockback with stagger
+        const horizontalKnockback = knockback * -this.facing * knockbackMultiplier;
+        const verticalKnockback = -100 - (damage * 2);
+        body.setVelocityX(horizontalKnockback);
+        body.setVelocityY(verticalKnockback);
       }
       
       // MvC-style hit effects
       this.createMvCHitSpark();
+      this.createHitStaggerEffect();
       
-      // Screen shake on heavy hits
-      if (damage > 15) {
-        this.scene.cameras.main.shake(100, 0.01);
+      // Dynamic screen shake based on damage
+      const shakeIntensity = Math.min(0.005 + (damage * 0.002), 0.04);
+      const shakeDuration = Math.min(100 + (damage * 5), 300);
+      scene.cameras.main.shake(shakeDuration, shakeIntensity);
+      
+      // Additional impact shake for heavy hits
+      if (damage > 20) {
+        scene.time.delayedCall(100, () => {
+          scene.cameras.main.shake(150, shakeIntensity * 0.6);
+        });
       }
       
-      this.scene.time.delayedCall(350, () => {
+      // Camera punch effect for very heavy hits
+      if (damage > 30) {
+        this.createCameraPunchEffect(damage);
+      }
+      
+      // Extended hitstun based on damage
+      const hitstunTime = 300 + (damage * 8);
+      this.scene.time.delayedCall(hitstunTime, () => {
         this.hitstunFrames = 0;
         if (this.engineChar.state === 'hit_stun') {
           this.changeState('idle');
@@ -1010,6 +1053,118 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
     
     // MvC-style damage number
     this.showDamageNumber(damage, isBlocked);
+  }
+
+  createHitStaggerEffect() {
+    // Motion blur trail during knockback
+    for (let i = 0; i < 5; i++) {
+      this.scene.time.delayedCall(i * 30, () => {
+        const ghost = this.scene.add.rectangle(
+          this.x + (i * 15 * this.facing),
+          this.y,
+          this.displayWidth * 0.8,
+          this.displayHeight * 0.8,
+          0xff0000,
+          0.4 - (i * 0.07)
+        );
+        this.scene.tweens.add({
+          targets: ghost,
+          alpha: 0,
+          scaleX: 0.5,
+          duration: 150,
+          onComplete: () => ghost.destroy()
+        });
+      });
+    }
+    
+    // Impact ring effect
+    const impactRing = this.scene.add.circle(this.x, this.y, 30, 0xffffff, 0);
+    impactRing.setStrokeStyle(4, 0xff6600);
+    this.scene.tweens.add({
+      targets: impactRing,
+      scale: 3,
+      alpha: 0,
+      duration: 200,
+      onComplete: () => impactRing.destroy()
+    });
+  }
+
+  createLaunchEffect() {
+    // Vertical launch streak
+    const launchStreak = this.scene.add.rectangle(
+      this.x,
+      this.y + 100,
+      30,
+      200,
+      0x00ffff,
+      0.6
+    );
+    this.scene.tweens.add({
+      targets: launchStreak,
+      y: this.y - 100,
+      alpha: 0,
+      scaleY: 0.2,
+      duration: 300,
+      onComplete: () => launchStreak.destroy()
+    });
+    
+    // Launch particles
+    for (let i = 0; i < 8; i++) {
+      const particle = this.scene.add.circle(
+        this.x + Phaser.Math.Between(-30, 30),
+        this.y,
+        8,
+        0x00ffff,
+        0.8
+      );
+      this.scene.tweens.add({
+        targets: particle,
+        y: particle.y - 150,
+        x: particle.x + Phaser.Math.Between(-50, 50),
+        alpha: 0,
+        duration: 400,
+        ease: 'Power2',
+        onComplete: () => particle.destroy()
+      });
+    }
+  }
+
+  createCameraPunchEffect(damage: number) {
+    const scene = this.scene as FightingGameScene;
+    const camera = scene.cameras.main;
+    const originalX = camera.scrollX;
+    const originalY = camera.scrollY;
+    const punchOffset = Math.min(damage * 0.5, 20);
+    
+    // Quick camera punch in hit direction
+    scene.tweens.add({
+      targets: camera,
+      scrollX: originalX + (punchOffset * -this.facing),
+      scrollY: originalY - (punchOffset * 0.5),
+      duration: 50,
+      ease: 'Power2',
+      yoyo: true,
+      onComplete: () => {
+        camera.scrollX = originalX;
+        camera.scrollY = originalY;
+      }
+    });
+    
+    // Screen flash for heavy impact
+    const flash = scene.add.rectangle(
+      scene.scale.width / 2,
+      scene.scale.height / 2,
+      scene.scale.width,
+      scene.scale.height,
+      0xff0000,
+      0.3
+    );
+    scene.tweens.add({
+      targets: flash,
+      alpha: 0,
+      duration: 100,
+      onComplete: () => flash.destroy()
+    });
   }
 
   createBlockSpark() {
@@ -1034,40 +1189,74 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
   }
 
   createMvCHitSpark() {
-    // Large central spark
-    const mainSpark = this.scene.add.circle(this.x, this.y, 30, 0xffffff);
+    // Large central impact flash
+    const mainSpark = this.scene.add.circle(this.x, this.y, 40, 0xffffff);
     this.scene.tweens.add({
       targets: mainSpark,
-      scale: 2,
+      scale: 2.5,
       alpha: 0,
-      duration: 150,
+      duration: 120,
+      ease: 'Power2',
       onComplete: () => mainSpark.destroy()
     });
     
-    // Radiating sparks
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2;
+    // Inner bright core
+    const core = this.scene.add.circle(this.x, this.y, 25, 0xffff00);
+    this.scene.tweens.add({
+      targets: core,
+      scale: 1.8,
+      alpha: 0,
+      duration: 100,
+      onComplete: () => core.destroy()
+    });
+    
+    // Radiating sparks with trails
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2;
+      const distance = 100 + Phaser.Math.Between(0, 40);
       const spark = this.scene.add.circle(
         this.x,
         this.y,
-        12,
+        Phaser.Math.Between(8, 15),
         HIT_SPARK_COLORS[i % HIT_SPARK_COLORS.length]
       );
       this.scene.tweens.add({
         targets: spark,
-        x: this.x + Math.cos(angle) * 80,
-        y: this.y + Math.sin(angle) * 80,
+        x: this.x + Math.cos(angle) * distance,
+        y: this.y + Math.sin(angle) * distance,
         alpha: 0,
-        scale: 0.3,
-        duration: 200,
+        scale: 0.2,
+        duration: 180,
+        ease: 'Power2',
         onComplete: () => spark.destroy()
       });
     }
     
-    // Flash effect
+    // Diagonal slash lines (MvC style)
+    for (let i = 0; i < 4; i++) {
+      const angle = (Math.PI / 4) + (i * Math.PI / 2);
+      const slashLine = this.scene.add.rectangle(
+        this.x,
+        this.y,
+        80,
+        6,
+        0xffffff,
+        0.9
+      ).setRotation(angle);
+      this.scene.tweens.add({
+        targets: slashLine,
+        scaleX: 2,
+        alpha: 0,
+        duration: 150,
+        onComplete: () => slashLine.destroy()
+      });
+    }
+    
+    // Hit flash sequence
     this.setTint(0xffffff);
-    this.scene.time.delayedCall(50, () => this.setTint(0xff6600));
-    this.scene.time.delayedCall(100, () => this.clearTint());
+    this.scene.time.delayedCall(40, () => this.setTint(0xff6600));
+    this.scene.time.delayedCall(80, () => this.setTint(0xff3300));
+    this.scene.time.delayedCall(120, () => this.clearTint());
   }
 
   showDamageNumber(damage: number, isBlocked: boolean) {
