@@ -235,8 +235,8 @@ export class FighterSprite extends Phaser.Physics.Arcade.Sprite {
       this.characterGraphics.destroy();
       this.setTexture('character-' + config.name);
     } else {
-      // Scale and adjust the actual character image
-      this.setDisplaySize(200, 280); // MvC-style larger sprites
+      // Scale and adjust the actual character image - large like screenshot
+      this.setDisplaySize(280, 380); // Much larger sprites to match screenshot style
     }
     
     scene.add.existing(this);
@@ -1820,6 +1820,7 @@ export class FightingGameScene extends Phaser.Scene {
   private playerConfig!: FighterConfig;
   private opponentConfig!: FighterConfig;
   private arenaKey!: string;
+  private arenaImageUrl?: string;
   private playerSuperMove!: string;
   private opponentSuperMove!: string;
   private boosterPickup?: Phaser.GameObjects.Sprite;
@@ -1828,6 +1829,9 @@ export class FightingGameScene extends Phaser.Scene {
   private aiCooldown = 0;
   private aiAggressiveness = 0.6;
   private comboResetTimer = 0;
+  private roundTimer = 99;
+  private timerText!: Phaser.GameObjects.Text;
+  private roundTimerEvent?: Phaser.Time.TimerEvent;
   
   // Assist system
   private playerAssist?: AssistConfig;
@@ -1848,6 +1852,7 @@ export class FightingGameScene extends Phaser.Scene {
     playerConfig: FighterConfig;
     opponentConfig: FighterConfig;
     arenaKey: string;
+    arenaImageUrl?: string;
     playerSuperMove?: string;
     opponentSuperMove?: string;
     playerAssist?: AssistConfig;
@@ -1858,6 +1863,7 @@ export class FightingGameScene extends Phaser.Scene {
       this.playerConfig = data.playerConfig;
       this.opponentConfig = data.opponentConfig;
       this.arenaKey = data.arenaKey;
+      this.arenaImageUrl = data.arenaImageUrl;
       this.playerSuperMove = data.playerSuperMove || "Divine Strike";
       this.opponentSuperMove = data.opponentSuperMove || "Dark Punishment";
       this.playerAssist = data.playerAssist;
@@ -1868,6 +1874,7 @@ export class FightingGameScene extends Phaser.Scene {
       this.playerAssistCooldown = 0;
       this.opponentAssistCooldown = 0;
       this.aiCooldown = 0;
+      this.roundTimer = 99;
     }
   }
 
@@ -1879,8 +1886,16 @@ export class FightingGameScene extends Phaser.Scene {
   create() {
     if (!this.playerConfig || !this.opponentConfig) return;
     
-    // Load character images dynamically
+    // Load character images and arena dynamically
     const imagesToLoad: { key: string; url: string }[] = [];
+    
+    // Load arena background image
+    if (this.arenaImageUrl) {
+      const arenaKey = 'arena-' + this.arenaKey.replace(/\s+/g, '-').toLowerCase();
+      if (!this.textures.exists(arenaKey)) {
+        imagesToLoad.push({ key: arenaKey, url: this.arenaImageUrl });
+      }
+    }
     
     if (this.playerConfig.imageUrl) {
       const playerKey = 'fighter-' + this.playerConfig.name.replace(/\s+/g, '-').toLowerCase();
@@ -1941,9 +1956,9 @@ export class FightingGameScene extends Phaser.Scene {
     // Ground with platform
     this.createStage();
     
-    // Create fighters
-    this.player = new FighterSprite(this, 250, 420, this.playerConfig, true, this.playerSuperMove);
-    this.opponent = new FighterSprite(this, this.scale.width - 250, 420, this.opponentConfig, false, this.opponentSuperMove);
+    // Create fighters - positioned lower to stand on ground, spread apart
+    this.player = new FighterSprite(this, 200, 380, this.playerConfig, true, this.playerSuperMove);
+    this.opponent = new FighterSprite(this, this.scale.width - 200, 380, this.opponentConfig, false, this.opponentSuperMove);
     this.opponent.facing = -1;
     
     // Initialize base scale for animation system
@@ -1985,107 +2000,220 @@ export class FightingGameScene extends Phaser.Scene {
   }
 
   createParallaxBackground() {
-    // Far background - dark sky
-    const bg1 = this.add.graphics();
-    bg1.fillGradientStyle(0x1a0a2e, 0x1a0a2e, 0x0d0518, 0x0d0518, 1);
-    bg1.fillRect(0, 0, this.scale.width, this.scale.height);
+    // Check if arena image exists and use it
+    const arenaKey = 'arena-' + this.arenaKey.replace(/\s+/g, '-').toLowerCase();
     
-    // Mid background - distant structures
-    const bg2 = this.add.graphics();
-    for (let i = 0; i < 8; i++) {
-      bg2.fillStyle(0x2a1a3e + i * 0x050505, 0.6);
-      const height = 100 + Math.random() * 200;
-      bg2.fillRect(i * 150 - 50, this.scale.height - height - 100, 80 + Math.random() * 60, height);
-    }
-    
-    // Near background - ground details
-    const bg3 = this.add.graphics();
-    bg3.fillStyle(0x3a2a4e, 0.8);
-    for (let i = 0; i < 15; i++) {
-      bg3.fillRect(i * 80, this.scale.height - 180, 3, 80);
-    }
-    
-    // Atmospheric particles
-    for (let i = 0; i < 20; i++) {
-      const particle = this.add.circle(
-        Phaser.Math.Between(0, this.scale.width),
-        Phaser.Math.Between(100, this.scale.height - 200),
-        Phaser.Math.Between(1, 3),
-        0xffffff,
-        0.3
-      );
-      this.tweens.add({
-        targets: particle,
-        y: particle.y - 100,
-        alpha: 0,
-        duration: Phaser.Math.Between(3000, 6000),
-        repeat: -1,
-        onRepeat: () => {
-          particle.x = Phaser.Math.Between(0, this.scale.width);
-          particle.y = this.scale.height - 150;
-          particle.alpha = 0.3;
-        }
-      });
+    if (this.textures.exists(arenaKey)) {
+      // Use the actual arena background image - fill entire screen
+      const arenaBg = this.add.image(this.scale.width / 2, this.scale.height / 2, arenaKey);
+      
+      // Scale to cover the entire game area
+      const scaleX = this.scale.width / arenaBg.width;
+      const scaleY = this.scale.height / arenaBg.height;
+      const scale = Math.max(scaleX, scaleY);
+      arenaBg.setScale(scale);
+      arenaBg.setDepth(-10);
+    } else {
+      // Fallback: Far background - dark sky
+      const bg1 = this.add.graphics();
+      bg1.fillGradientStyle(0x1a0a2e, 0x1a0a2e, 0x0d0518, 0x0d0518, 1);
+      bg1.fillRect(0, 0, this.scale.width, this.scale.height);
+      
+      // Mid background - distant structures
+      const bg2 = this.add.graphics();
+      for (let i = 0; i < 8; i++) {
+        bg2.fillStyle(0x2a1a3e + i * 0x050505, 0.6);
+        const height = 100 + Math.random() * 200;
+        bg2.fillRect(i * 150 - 50, this.scale.height - height - 100, 80 + Math.random() * 60, height);
+      }
     }
   }
 
   createMvCHUD() {
-    const hudHeight = 100;
+    const hudDepth = 100;
     
-    // HUD background
-    const hudBg = this.add.graphics();
-    hudBg.fillStyle(0x000000, 0.85);
-    hudBg.fillRect(0, 0, this.scale.width, hudHeight);
-    hudBg.lineStyle(4, 0xd4af37);
-    hudBg.strokeRect(5, 5, this.scale.width - 10, hudHeight - 10);
+    // Top HUD container - semi-transparent dark background
+    const hudBg = this.add.graphics().setDepth(hudDepth);
+    hudBg.fillStyle(0x000000, 0.7);
+    hudBg.fillRect(0, 0, this.scale.width, 90);
     
-    // Player portrait frame
-    this.createPortraitFrame(60, 50, this.playerConfig, true);
-    this.createPortraitFrame(this.scale.width - 60, 50, this.opponentConfig, false);
+    // Gold border at bottom of HUD
+    hudBg.lineStyle(3, 0xd4af37);
+    hudBg.lineBetween(0, 88, this.scale.width, 88);
     
-    // VS emblem
-    const vsText = this.add.text(this.scale.width / 2, 50, 'VS', {
-      fontSize: '36px',
-      color: '#d4af37',
+    // === PLAYER SIDE (LEFT) ===
+    
+    // Player portrait with gold border
+    this.createPortraitFrame(45, 45, this.playerConfig, true);
+    
+    // Player name - styled like screenshot (cyan/blue for good)
+    const playerNameColor = this.playerConfig.alignment === 'Good' ? '#00d4ff' : '#ff4444';
+    this.add.text(90, 8, this.playerConfig.name.toUpperCase(), {
+      fontSize: '24px',
+      color: playerNameColor,
       fontFamily: 'Impact, sans-serif',
       stroke: '#000',
-      strokeThickness: 6
-    }).setOrigin(0.5);
+      strokeThickness: 4
+    }).setDepth(hudDepth + 1);
     
-    // Health bar labels
-    this.add.text(130, 25, this.playerConfig.name.toUpperCase(), {
-      fontSize: '20px',
+    // Player health bar background
+    const playerHealthBgWidth = 280;
+    const healthBarHeight = 22;
+    hudBg.fillStyle(0x333333, 1);
+    hudBg.fillRect(90, 32, playerHealthBgWidth, healthBarHeight);
+    hudBg.lineStyle(2, 0x666666);
+    hudBg.strokeRect(90, 32, playerHealthBgWidth, healthBarHeight);
+    
+    // Player super meter background at bottom
+    const meterY = 58;
+    const meterHeight = 16;
+    hudBg.fillStyle(0x222222, 1);
+    hudBg.fillRect(90, meterY, 200, meterHeight);
+    hudBg.lineStyle(1, 0x444444);
+    hudBg.strokeRect(90, meterY, 200, meterHeight);
+    
+    // === CENTER - TIMER ===
+    
+    // Timer background box
+    const timerBgWidth = 70;
+    const timerBgHeight = 50;
+    const timerX = this.scale.width / 2;
+    
+    // Brown/gold timer box like in screenshot
+    const timerBg = this.add.graphics().setDepth(hudDepth);
+    timerBg.fillStyle(0x8B4513, 1);
+    timerBg.fillRect(timerX - timerBgWidth/2, 15, timerBgWidth, timerBgHeight);
+    timerBg.lineStyle(3, 0xd4af37);
+    timerBg.strokeRect(timerX - timerBgWidth/2, 15, timerBgWidth, timerBgHeight);
+    
+    // Timer text
+    this.timerText = this.add.text(timerX, 40, '99', {
+      fontSize: '36px',
       color: '#ffffff',
-      fontFamily: 'Arial Black, sans-serif',
+      fontFamily: 'Impact, sans-serif',
       stroke: '#000',
-      strokeThickness: 3
+      strokeThickness: 4
+    }).setOrigin(0.5).setDepth(hudDepth + 1);
+    
+    // Round indicator text (left of timer)
+    this.add.text(timerX - 100, 28, 'ROUND 1', {
+      fontSize: '14px',
+      color: '#ffffff',
+      fontFamily: 'Arial, sans-serif',
+      stroke: '#000',
+      strokeThickness: 2
+    }).setOrigin(0.5).setDepth(hudDepth + 1);
+    
+    // FIGHT! text (right of timer)
+    this.add.text(timerX + 100, 28, 'FIGHT!', {
+      fontSize: '14px',
+      color: '#ffff00',
+      fontFamily: 'Arial, sans-serif',
+      stroke: '#000',
+      strokeThickness: 2
+    }).setOrigin(0.5).setDepth(hudDepth + 1);
+    
+    // === OPPONENT SIDE (RIGHT) ===
+    
+    // Opponent portrait with gold border
+    this.createPortraitFrame(this.scale.width - 45, 45, this.opponentConfig, false);
+    
+    // Opponent name - styled like screenshot (yellow/gold for evil)
+    const opponentNameColor = this.opponentConfig.alignment === 'Evil' ? '#ffcc00' : '#00d4ff';
+    this.add.text(this.scale.width - 90, 8, this.opponentConfig.name.toUpperCase(), {
+      fontSize: '24px',
+      color: opponentNameColor,
+      fontFamily: 'Impact, sans-serif',
+      stroke: '#000',
+      strokeThickness: 4
+    }).setOrigin(1, 0).setDepth(hudDepth + 1);
+    
+    // Opponent health bar background (right-aligned, fills from right)
+    hudBg.fillStyle(0x333333, 1);
+    hudBg.fillRect(this.scale.width - 90 - playerHealthBgWidth, 32, playerHealthBgWidth, healthBarHeight);
+    hudBg.lineStyle(2, 0x666666);
+    hudBg.strokeRect(this.scale.width - 90 - playerHealthBgWidth, 32, playerHealthBgWidth, healthBarHeight);
+    
+    // Opponent super meter background
+    hudBg.fillStyle(0x222222, 1);
+    hudBg.fillRect(this.scale.width - 90 - 200, meterY, 200, meterHeight);
+    hudBg.lineStyle(1, 0x444444);
+    hudBg.strokeRect(this.scale.width - 90 - 200, meterY, 200, meterHeight);
+    
+    // === BOTTOM METER ICONS ===
+    // Player assist icons (bottom left) - blue circles
+    this.createAssistIcons(80, this.scale.height - 40, true);
+    
+    // Opponent assist icons (bottom right) - red circles
+    this.createAssistIcons(this.scale.width - 80, this.scale.height - 40, false);
+    
+    // Start round timer
+    this.roundTimerEvent = this.time.addEvent({
+      delay: 1000,
+      callback: () => {
+        if (this.roundTimer > 0 && !this.gameOver) {
+          this.roundTimer--;
+          this.timerText.setText(this.roundTimer.toString().padStart(2, '0'));
+          
+          // Flash timer when low
+          if (this.roundTimer <= 10) {
+            this.timerText.setColor('#ff0000');
+            this.tweens.add({
+              targets: this.timerText,
+              scale: 1.2,
+              duration: 100,
+              yoyo: true
+            });
+          }
+          
+          // Time out - player with more health wins
+          if (this.roundTimer === 0) {
+            const playerWins = this.player.engineChar.health > this.opponent.engineChar.health;
+            this.endGame(playerWins);
+          }
+        }
+      },
+      loop: true
     });
+  }
+
+  createAssistIcons(x: number, y: number, isPlayer: boolean) {
+    const color = isPlayer ? 0x0088ff : 0xff4444;
+    const iconSpacing = 35;
     
-    this.add.text(this.scale.width - 130, 25, this.opponentConfig.name.toUpperCase(), {
-      fontSize: '20px',
-      color: '#ffffff',
-      fontFamily: 'Arial Black, sans-serif',
-      stroke: '#000',
-      strokeThickness: 3
-    }).setOrigin(1, 0);
+    for (let i = 0; i < 3; i++) {
+      const iconX = x + (isPlayer ? i * iconSpacing : -i * iconSpacing);
+      
+      // Icon background
+      const iconBg = this.add.circle(iconX, y, 14, color, 0.8);
+      iconBg.setStrokeStyle(2, 0x000000);
+      iconBg.setDepth(100);
+      
+      // Simple icon symbol
+      const symbols = ['⚡', '🛡', '⚔'];
+      this.add.text(iconX, y, symbols[i], {
+        fontSize: '14px',
+        color: '#ffffff'
+      }).setOrigin(0.5).setDepth(101);
+    }
   }
 
   createPortraitFrame(x: number, y: number, config: FighterConfig, isPlayer: boolean) {
     const color = config.alignment === 'Good' ? 0x3388ff : 0xff3333;
+    const hudDepth = 100;
     
-    // Portrait background
-    const portrait = this.add.circle(x, y, 40, color, 0.8);
-    portrait.setStrokeStyle(4, 0xd4af37);
-    
-    // Inner ring
-    const innerRing = this.add.circle(x, y, 35, 0x000000, 0.3);
+    // Portrait background circle
+    const portrait = this.add.circle(x, y, 36, color, 0.9);
+    portrait.setStrokeStyle(3, 0xd4af37);
+    portrait.setDepth(hudDepth);
     
     // Try to use actual character image as portrait
     const textureKey = 'fighter-' + config.name.replace(/\s+/g, '-').toLowerCase();
     if (this.textures.exists(textureKey)) {
       // Create a circular masked portrait using the actual character image
       const portraitImg = this.add.image(x, y, textureKey);
-      portraitImg.setDisplaySize(70, 70);
+      portraitImg.setDisplaySize(64, 64);
+      portraitImg.setDepth(hudDepth + 1);
       
       // Create circular mask
       const maskShape = this.make.graphics({});
@@ -2095,37 +2223,27 @@ export class FightingGameScene extends Phaser.Scene {
     } else {
       // Fallback to character initial
       this.add.text(x, y, config.name.charAt(0).toUpperCase(), {
-        fontSize: '32px',
+        fontSize: '28px',
         color: '#ffffff',
         fontFamily: 'Impact, sans-serif',
         stroke: '#000',
         strokeThickness: 4
-      }).setOrigin(0.5);
+      }).setOrigin(0.5).setDepth(hudDepth + 1);
     }
   }
 
   createStage() {
-    // Main platform
+    // Create invisible ground collider only (no visible platform since arena bg has ground)
     const ground = this.add.rectangle(
       this.scale.width / 2,
-      this.scale.height - 60,
+      this.scale.height - 40,
       this.scale.width,
-      120,
-      0x4a3a5a
+      80,
+      0x000000,
+      0 // Invisible
     );
     ground.setName('ground');
     this.physics.add.existing(ground, true);
-    
-    // Platform details
-    const platformDetails = this.add.graphics();
-    platformDetails.lineStyle(4, 0x6a5a7a);
-    platformDetails.strokeRect(10, this.scale.height - 120, this.scale.width - 20, 4);
-    platformDetails.fillStyle(0x5a4a6a);
-    platformDetails.fillRect(0, this.scale.height - 60, this.scale.width, 60);
-    
-    // Edge highlights
-    platformDetails.lineStyle(3, 0xd4af37, 0.5);
-    platformDetails.strokeRect(5, this.scale.height - 118, this.scale.width - 10, 56);
   }
 
   setupCombatCollisions() {

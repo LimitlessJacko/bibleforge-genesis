@@ -6,6 +6,7 @@ interface PhaserGameProps {
   playerConfig: FighterConfig;
   opponentConfig: FighterConfig;
   arenaKey: string;
+  arenaImageUrl?: string;
   onGameEnd: (playerWon: boolean) => void;
   playerSuperMove?: string;
   opponentSuperMove?: string;
@@ -16,7 +17,8 @@ interface PhaserGameProps {
 export const PhaserGame = ({ 
   playerConfig, 
   opponentConfig, 
-  arenaKey, 
+  arenaKey,
+  arenaImageUrl,
   onGameEnd, 
   playerSuperMove, 
   opponentSuperMove,
@@ -55,6 +57,7 @@ export const PhaserGame = ({
           playerConfig,
           opponentConfig,
           arenaKey,
+          arenaImageUrl,
           playerSuperMove,
           opponentSuperMove,
           playerAssist,
@@ -70,7 +73,7 @@ export const PhaserGame = ({
         gameRef.current = null;
       }
     };
-  }, [playerConfig, opponentConfig, arenaKey, onGameEnd, playerAssist, opponentAssist]);
+  }, [playerConfig, opponentConfig, arenaKey, arenaImageUrl, onGameEnd, playerAssist, opponentAssist]);
 
   return (
     <div className="flex flex-col items-center gap-4">

@@ -1130,6 +1130,7 @@ const ArcadeFighting = () => {
                 imageUrl: characterImages[opponent.name]
               }}
               arenaKey={selectedArena.id}
+              arenaImageUrl={selectedArena.image}
               onGameEnd={finishBattle}
               playerSuperMove={player.superMove}
               opponentSuperMove={opponent.superMove}
