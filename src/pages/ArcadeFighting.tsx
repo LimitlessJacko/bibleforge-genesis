@@ -149,7 +149,7 @@ const ArcadeFighting = () => {
   const [opponentMeter, setOpponentMeter] = useState(0);
   const [comboCount, setComboCount] = useState(0);
   const [highestCombo, setHighestCombo] = useState(0);
-  const [comboTimer, setComboTimer] = useState<NodeJS.Timeout | null>(null);
+  const [comboTimer, setComboTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [battleLog, setBattleLog] = useState<string[]>([]);
   const [canComboBreak, setCanComboBreak] = useState(false);
   const [unlockedCharacters, setUnlockedCharacters] = useState<string[]>([]);
